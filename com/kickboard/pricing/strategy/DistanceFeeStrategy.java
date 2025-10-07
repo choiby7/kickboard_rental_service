@@ -1,3 +1,5 @@
+package pricing.strategy;
+
 import java.math.BigDecimal;
 
 /**
