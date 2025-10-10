@@ -19,7 +19,12 @@ public final class RentalInfo {
     public RentalInfo(LocalDateTime startTime, LocalDateTime endTime, double traveledDistance) {
         this.startTime = Objects.requireNonNull(startTime, "startTime");
         this.endTime = endTime;
-        if (traveledDistanceKm < 0) throw new IllegalArgumentException("distance < 0"); // distance는 항상 0 이상
-            this.traveledDistanceKm = traveledDistanceKm;
+        if (traveledDistance < 0) throw new IllegalArgumentException("distance < 0"); // distance는 항상 0 이상
+            this.traveledDistance = traveledDistance;
     }
+
+    // getter 구현
+    public LocalDateTime getStartTime() { return startTime; }
+    public LocalDateTime getEndTime() { return endTime; }
+    public double getTraveledDistance() { return traveledDistance; }
 }
