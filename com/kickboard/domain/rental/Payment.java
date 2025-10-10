@@ -29,7 +29,8 @@ public class Payment {
 
     public boolean processPayment() {
         if (amount == null) throw new IllegalStateException("amount not set"); // amount가 null일 경우
-        if (paymentMethod.cardNumber == null || paymentMethod.cvc == null) throw new IllegalStateException("card info wrong"); // 카드번호 값이 존재하지 않을 경우
+        if (paymentMethod.getCardNumber() == null || paymentMethod.getCVC() == null) throw new IllegalStateException("card info wrong");
+        // 카드번호 값이 존재하지 않을 경우. 
 
         // 결재 불가한 케이스를 작성
         // ex) 카드의 잔액 부족
