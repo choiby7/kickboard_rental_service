@@ -15,7 +15,7 @@ public interface FeeStrategy {
      * 요금 계산 메서드
      * @return 계산된 요금 (BigDecimal)
      */
-    BigDecimal calculateFee();
+    BigDecimal calculateFee(domain.rental.RentalInfo rentalInfo);
 
     /**
      * 전략 이름 반환 ("Time-based", "Distance-based")
