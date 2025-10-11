@@ -1,7 +1,7 @@
-package pricing.discount;
+package com.kickboard.pricing.discount;
 
 import java.math.BigDecimal;
-import pricing.Fee;
+import com.kickboard.pricing.Fee;
 
 /**
  * PromotionDecorator.java	: 요금 할인 및 프로모션 적용을 위한 추상 데코레이터

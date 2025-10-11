@@ -1,4 +1,4 @@
-package domain.vehicle;
+package com.kickboard.domain.vehicle;
 
 /**
  * enumeration VehicleStatus
@@ -7,6 +7,6 @@ package domain.vehicle;
  * @version: 1.0
  * @date: 2025.10.8
  */
-enum VehicleStatus {
+public enum VehicleStatus {
   AVAILABLE, IN_USE, MAINTENANCE
 }

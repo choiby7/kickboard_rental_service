@@ -1,4 +1,4 @@
-package domain.rental;
+package com.kickboard.domain.rental;
 
 import java.time.LocalDateTime;
 import java.util.Objects;

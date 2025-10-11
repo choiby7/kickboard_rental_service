@@ -1,4 +1,6 @@
-package domain.rental;
+package com.kickboard.domain.rental;
+
+import com.kickboard.domain.user.PaymentMethod;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -29,7 +31,7 @@ public class Payment {
 
     public boolean processPayment() {
         if (amount == null) throw new IllegalStateException("amount not set"); // amount가 null일 경우
-        if (paymentMethod.getCardNumber() == null || paymentMethod.getCVC() == null) throw new IllegalStateException("card info wrong");
+        if (paymentMethod.getCardNumber() == null || paymentMethod.getCvc() == null) throw new IllegalStateException("card info wrong");
         // 카드번호 값이 존재하지 않을 경우. 
 
         // 결재 불가한 케이스를 작성

@@ -1,4 +1,4 @@
-package domain.user;
+package com.kickboard.domain.user;
 
 /**
  * class PaymentMethod.java

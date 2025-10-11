@@ -1,4 +1,4 @@
-package domain.rental;
+package com.kickboard.domain.rental;
 
 /**
  * enumeration RentalStatus
@@ -7,6 +7,6 @@ package domain.rental;
  * @version: 1.0
  * @date: 2025.10.8
  */
-enum RentalStatus {
+public enum RentalStatus {
   ACTIVE, COMPLETED, CANCELED
 }

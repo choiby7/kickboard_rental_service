@@ -1,7 +1,7 @@
 package com.kickboard;
 
-import notification.AllKickboardObserver;
-import service.KickboardRentalService;
+import com.kickboard.notification.AllKickboardObserver;
+import com.kickboard.service.KickboardRentalService;
 
 /**
  * Main.java			: 애플리케이션의 시작점. KickboardRentalService를 생성하고 실행한다.

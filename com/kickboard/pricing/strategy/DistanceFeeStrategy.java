@@ -1,6 +1,7 @@
-package pricing.strategy;
+package com.kickboard.pricing.strategy;
 
-import domain.rental.RentalInfo;
+import com.kickboard.domain.rental.Rental;
+import com.kickboard.domain.rental.RentalInfo;
 import java.math.BigDecimal;
 
 /**
@@ -17,12 +18,14 @@ public class DistanceFeeStrategy implements FeeStrategy {
 
     /**
      * 거리 기반 요금 계산 (Km당 요금 × 거리)
-     * @param rentalInfo 대여 정보 DTO
+     * @param rental 대여 정보 객체
      * @return 총 요금 (BigDecimal)
      */
     @Override
-    public BigDecimal calculateFee(RentalInfo rentalInfo) {
-        double distanceKm = rentalInfo.getTraveledDistance();
+    public BigDecimal calculateFee(Rental rental) {
+        // Rental 객체에서 RentalInfo를 가져와야 합니다.
+        // Rental 클래스에 getRentalInfo() 메서드가 필요합니다.
+        double distanceKm = rental.getRentalInfo().getTraveledDistance();
         return ratePerKilometer.multiply(BigDecimal.valueOf(distanceKm));
     }
 

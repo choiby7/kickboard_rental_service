@@ -1,4 +1,4 @@
-package domain.vehicle;
+package com.kickboard.domain.vehicle;
 
 import java.util.Objects;
 

@@ -1,4 +1,4 @@
-package notification;
+package com.kickboard.notification;
 
 /**
  * StatusObserver.java : 상태 변경 이벤트를 수신하는 옵저버의 인터페이스

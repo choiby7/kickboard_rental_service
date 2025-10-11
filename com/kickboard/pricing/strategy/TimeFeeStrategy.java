@@ -1,6 +1,8 @@
-package pricing.strategy;
+package com.kickboard.pricing.strategy;
 
-import domain.rental.RentalInfo;
+import com.kickboard.domain.rental.Rental;
+import com.kickboard.domain.rental.RentalInfo;
+
 import java.math.BigDecimal;
 import java.time.Duration;
 
@@ -18,15 +20,15 @@ public class TimeFeeStrategy implements FeeStrategy {
 
     /**
      * 시간 기반 요금 계산 (분당 요금 × 이용시간)
-     * @param rentalInfo 대여 정보 DTO
+     * @param rental 대여 정보 객체
      * @return 총 요금
      */
     @Override
-    public BigDecimal calculateFee(RentalInfo rentalInfo) {
-        if (rentalInfo.getEndTime() == null) {
+    public BigDecimal calculateFee(Rental rental) {
+        if (rental.getEndTime() == null) {
             return BigDecimal.ZERO; // 아직 운행 종료 전이면 0원
         }
-        long minutes = Duration.between(rentalInfo.getStartTime(), rentalInfo.getEndTime()).toMinutes();
+        long minutes = Duration.between(rental.getStartTime(), rental.getEndTime()).toMinutes();
         return RATE_PER_MINUTE.multiply(BigDecimal.valueOf(minutes));
     }
 
@@ -39,3 +41,4 @@ public class TimeFeeStrategy implements FeeStrategy {
         return "Time-based";
     }
 }
+

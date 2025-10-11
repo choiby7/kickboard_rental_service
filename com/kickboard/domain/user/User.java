@@ -1,4 +1,4 @@
-package domain.user;
+package com.kickboard.domain.user;
 
 import java.util.List;
 
@@ -34,19 +34,20 @@ public class User {
      * @param paramPassword : 입력 비밀번호
      * @return this: User : 본인 객체 반환
      */
-    public User login(String paramId, String paramPassword) {
-        if (userId.equals(paramId) && password.equals(paramPassword)) {
-            // login success
-            return this;
-        }
-        throw new RuntimeException("login fail");
+    /**
+     * 입력된 비밀번호가 사용자의 비밀번호와 일치하는지 확인합니다.
+     * @param password 확인할 비밀번호
+     * @return 일치하면 true, 아니면 false
+     */
+    public boolean checkPassword(String password) {
+        return this.password.equals(password);
     }
 
     /**
-     * 로그아웃 함수 - 미구현
+     * 로그아웃 함수 - 미구현 (세션 관리는 서비스 레이어에서 처리)
      */
     public void logout() {
-
+        // Domain object itself doesn't manage session state.
     }
 
     // getter & setter

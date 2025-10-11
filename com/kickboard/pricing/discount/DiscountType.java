@@ -1,4 +1,4 @@
-package pricing.discount;
+package com.kickboard.pricing.discount;
 
 /**
  * enumeration DiscountType

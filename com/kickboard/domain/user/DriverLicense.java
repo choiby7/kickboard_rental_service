@@ -1,4 +1,4 @@
-package domain.user;
+package com.kickboard.domain.user;
 
 /**
  * class DriverLicense.java: 면허정보 + 인증
