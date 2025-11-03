@@ -72,11 +72,15 @@ public class User implements Serializable{
     public DriverLicense getDriverLicense() {
         return this.license;
     }
+
+    /**
+     * 사용자에 운전면허 정보를 설정합니다.
+     * @param license 설정할 운전면허 정보 (null 허용)
+     */
     public void setDriverLicense(DriverLicense license) {
         this.license = license;
     }
 
-<<<<<<< HEAD
     /**
      * 사용자에 결제수단을 추가합니다.
      * @param method 추가할 결제수단 (null 허용 안함)
@@ -98,8 +102,5 @@ public class User implements Serializable{
         if (this.paymentMethods == null) return java.util.Collections.emptyList();
         return java.util.Collections.unmodifiableList(this.paymentMethods);
     }
-=======
-
->>>>>>> refs/remotes/origin/main
-
+    
 }
