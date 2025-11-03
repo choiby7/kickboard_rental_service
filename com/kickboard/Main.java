@@ -16,6 +16,7 @@ public class Main {
      * @param args
      */
     public static void main(String[] args) {
+    	// CSV 시작 파일 준비 (없으면 생성, 있으면 건드리지 않음)
         System.out.println("Kickboard Rental Service를 시작합니다.");
         
         // 1. 서비스(Subject) 생성
@@ -29,5 +30,3 @@ public class Main {
         service.startService();
     }
 }
-
-
