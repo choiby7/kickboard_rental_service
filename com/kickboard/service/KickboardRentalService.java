@@ -26,6 +26,7 @@ import java.util.UUID;
  * @version : 1.0
  * @date : 2025.10.11
  */
+
 public class KickboardRentalService {
 
     private final List<User> users;
@@ -49,6 +50,15 @@ public class KickboardRentalService {
 
         this.feeStrategies.add(new TimeFeeStrategy());
         this.feeStrategies.add(new DistanceFeeStrategy());
+        
+        // 상태 파일에서 로드
+        com.kickboard.persist.AppState state = com.kickboard.persist.StateStore.loadOrCreate();
+        if (state.getUsers() != null) this.users.addAll(state.getUsers());
+        if (state.getVehicles() != null) this.kickboards.addAll(state.getVehicles());
+        if (state.getRentals() != null) this.rentals.addAll(state.getRentals());
+        if (state.getCurrentUserId() != null) {
+            this.currentUser = findUserById(state.getCurrentUserId());
+        }
 
         Vehicle kickboard1 = new Vehicle("KB001", "Model S", "판교역", 85);
         Vehicle kickboard2 = new Vehicle("KB002", "Model A", "정자역", 100);
@@ -84,6 +94,7 @@ public class KickboardRentalService {
                     User userToLogin = findUserById(loginId);
                     if (userToLogin != null && userToLogin.checkPassword(loginPassword)) {
                         this.currentUser = userToLogin;
+                        saveState(); // 로그인 성공 시 상태 저장
                         System.out.println("로그인 성공! " + this.currentUser.getUserId() + "님, 환영합니다.");
                     } else {
                         System.out.println("오류: ID 또는 비밀번호가 일치하지 않습니다.");
@@ -95,6 +106,7 @@ public class KickboardRentalService {
                     } else {
                         System.out.println(this.currentUser.getUserId() + "님이 로그아웃하셨습니다.");
                         this.currentUser = null;
+                        saveState(); // 로그아웃 시 상태 저장
                     }
                     break;
                 case "whoami":
@@ -143,6 +155,11 @@ public class KickboardRentalService {
                     returnKickboard(this.currentUser);
                     break;
                 case "exit":
+                	saveState();
+                	// CSV로 현재 상태 내보내기
+                    com.kickboard.persist.CsvExporter.exportToCsv(
+                        com.kickboard.persist.StateStore.loadOrCreate()
+                    );
                     System.out.println("서비스를 종료합니다. 이용해주셔서 감사합니다.");
                     this.scanner.close();
                     return;
@@ -163,6 +180,7 @@ public class KickboardRentalService {
         User newUser = new User(userId, password);
         this.users.add(newUser);
         System.out.println("'" + userId + "'님, 사용자 등록이 완료되었습니다.");
+        saveState(); // 엑셀 파일에 저장
     }
 
     public void rentKickboard(User user, String kickboardId) {
@@ -187,6 +205,7 @@ public class KickboardRentalService {
         this.rentals.add(newRental);
         System.out.printf("대여 완료! [사용자: %s, 킥보드: %s, 대여 ID: %s]\n", user.getUserId(), kickboardId, rentalId);
         notifyAll(new StatusEvent(StatusEvent.EventType.RENTAL_STARTED, newRental));
+        saveState();
     }
 
     public void returnKickboard(User user) {
@@ -261,6 +280,7 @@ public class KickboardRentalService {
             rental.getRentalId(), rental.getUser().getUserId(), rental.getVehicle().getVehicleId());
         
         notifyAll(new StatusEvent(StatusEvent.EventType.RENTAL_ENDED, rental));
+        saveState();
     }
 
     public void addObserver(StatusObserver observer) {
@@ -298,5 +318,15 @@ public class KickboardRentalService {
             }
         }
         return null;
+    }
+    
+    private void saveState() {
+        com.kickboard.persist.AppState state = new com.kickboard.persist.AppState();
+        state.setUsers(this.users);
+        state.setVehicles(this.kickboards);
+        state.setRentals(this.rentals);
+        state.setCurrentUserId(this.currentUser == null ? null : this.currentUser.getUserId());
+
+        com.kickboard.persist.StateStore.save(state);
     }
 }

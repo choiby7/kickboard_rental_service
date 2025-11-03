@@ -1,8 +1,9 @@
 package com.kickboard.domain.vehicle;
 
+import java.io.Serializable;
 import java.util.Objects;
 
-public class Vehicle {
+public class Vehicle implements Serializable{
 
   /**
   * Vehicle.java	: Vehicle 초기 구현
@@ -61,7 +62,3 @@ public class Vehicle {
   public int getBatteryLevel() { return batteryLevel; }
   
 }
-
-
-
-

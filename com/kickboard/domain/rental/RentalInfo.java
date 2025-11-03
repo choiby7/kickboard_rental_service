@@ -1,9 +1,10 @@
 package com.kickboard.domain.rental;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
-public final class RentalInfo {
+public final class RentalInfo implements Serializable{
 
     /**
     * RentalInfo.java	: RentalInfo 초기 구현

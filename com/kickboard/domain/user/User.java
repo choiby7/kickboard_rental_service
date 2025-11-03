@@ -1,5 +1,6 @@
 package com.kickboard.domain.user;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**
@@ -9,7 +10,7 @@ import java.util.List;
  * @version : 1.0
  * @date : 2025.10.08
  */
-public class User {
+public class User implements Serializable{
 
     private final String userId;
     private final String password;
@@ -75,6 +76,7 @@ public class User {
         this.license = license;
     }
 
+<<<<<<< HEAD
     /**
      * 사용자에 결제수단을 추가합니다.
      * @param method 추가할 결제수단 (null 허용 안함)
@@ -96,5 +98,8 @@ public class User {
         if (this.paymentMethods == null) return java.util.Collections.emptyList();
         return java.util.Collections.unmodifiableList(this.paymentMethods);
     }
+=======
+
+>>>>>>> refs/remotes/origin/main
 
 }
