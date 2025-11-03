@@ -77,8 +77,6 @@ public class User {
 
     /**
      * 사용자에 결제수단을 추가합니다.
-     * - 내부에서 리스트를 lazy-init 합니다.
-     *
      * @param method 추가할 결제수단 (null 허용 안함)
      */
     public void addPaymentMethod(PaymentMethod method) {
@@ -89,7 +87,7 @@ public class User {
 
     /**
      * 사용자에 연결된 결제수단 목록을 읽기전용으로 반환합니다.
-     * - null 안정성: 내부 리스트가 아직 생성되지 않았으면 빈 리스트를 반환합니다.
+     * - null 반환 x: 내부 리스트가 아직 생성되지 않았으면 빈 리스트를 반환합니다.
      * - 외부에서 직접 수정하면 안되므로 읽기전용 뷰를 제공합니다.
      *
      * @return 결제수단 리스트 (수정 불가 뷰)
