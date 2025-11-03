@@ -14,12 +14,13 @@ import com.kickboard.pricing.Fee;
 import com.kickboard.pricing.discount.PromotionDecorator;
 import com.kickboard.pricing.strategy.FeeStrategy;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
-public class Rental {
+public class Rental implements Serializable{
 
     private final String rentalId;
     private final User user;
