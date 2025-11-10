@@ -7,7 +7,7 @@ package com.kickboard.domain.user;
  * @version: 1.0
  * @date: 2025.10.8
  */
-public class PaymentMethod {
+public class PaymentMethod implements Serializable{ // implements Seriallizable 추가
     private final String cardNumber;
     private final String cvc;
 
