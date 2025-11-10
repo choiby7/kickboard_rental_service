@@ -33,4 +33,22 @@ public abstract class PromotionDecorator implements Fee {
     public BigDecimal getFinalCost() {
         return decoratedFee.getFinalCost();
     }
+
+    @Override // 할인 정보 출력
+    public String getDisplayName() {
+        return this.getClass().getSimpleName();
+    }
+
+    /**
+     * 객체를 감싸기 위한 decorate 메서드
+     */
+    public Fee decorate(Fee fee) {
+        try {
+            return this.getClass()
+                       .getConstructor(Fee.class, this.getClass())
+                       .newInstance(fee, this);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to decorate fee", e);
+        }
+    }
 }
