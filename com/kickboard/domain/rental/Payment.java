@@ -30,7 +30,7 @@ public class Payment {
         this.status = PaymentStatus.FAILED; // 초기 상태
     }
 
-    public boolean processPayment() {
+    public boolean processPaymentCheck() {
         if (amount == null) throw new IllegalStateException("amount not set"); // amount가 null일 경우
         if (paymentMethod.getCardNumber() == null || paymentMethod.getCvc() == null) throw new IllegalStateException("card info wrong"); // 카드번호 값이 존재하지 않을 경우.
         
