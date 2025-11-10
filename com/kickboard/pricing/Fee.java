@@ -13,4 +13,6 @@ public interface Fee {
 
 	//최종 결제 금액을 반환
     BigDecimal getFinalCost();
+	// 정보 출력 시 사용
+	String getDisplayName();
 }
