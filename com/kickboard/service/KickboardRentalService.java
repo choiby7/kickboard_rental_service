@@ -2,18 +2,22 @@ package com.kickboard.service;
 
 import com.kickboard.domain.rental.Rental;
 import com.kickboard.domain.rental.RentalStatus;
+import com.kickboard.domain.user.PaymentMethod;
 import com.kickboard.domain.user.User;
 import com.kickboard.domain.vehicle.Vehicle;
 import com.kickboard.domain.vehicle.VehicleStatus;
 import com.kickboard.notification.StatusEvent;
 import com.kickboard.notification.StatusObserver;
 import com.kickboard.pricing.Fee;
+import com.kickboard.pricing.discount.CardDiscountDecorator;
+import com.kickboard.pricing.discount.CouponDiscountDecorator;
 import com.kickboard.pricing.discount.PromotionDecorator;
 import com.kickboard.pricing.strategy.DistanceFeeStrategy;
 import com.kickboard.pricing.strategy.FeeStrategy;
 import com.kickboard.pricing.strategy.TimeFeeStrategy;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -252,14 +256,140 @@ public class KickboardRentalService {
         System.out.println(">> '" + chosenStrategy.name() + "' 요금제로 계산합니다.");
 
         List<PromotionDecorator> discounts = new ArrayList<>();
-        Fee finalFee = rental.calculateFinalFee(chosenStrategy, discounts);
+        
+        // update: 2025.11.10 -> 할인 프로모션 적용 및 결제 프로세스 구현 
+
+        // 임시 할인 프로모션 추가
+        discounts.add(new CardDiscountDecorator(null, "현대카드", new BigDecimal(0.10))); // 현대카드 10% 할인
+        discounts.add(new CardDiscountDecorator(null, "삼성카드", new BigDecimal(0.05))); // 삼성카드 5% 할인
+        discounts.add(new CouponDiscountDecorator(null, "대학생 프로모션 쿠폰", "COLLEGE12345", new BigDecimal(0.05))); // 대학생 쿠폰 5% 할인
+        
+        // <할인 프로모션 시작>
+
+        /**
+        * 사용자가 적용할 할인 프로모션을 입력 (숫자 및 공백 한정 활용. 예시: 1 3 4)
+        * 사용자가 잘못된 입력을 할 경우 대처
+        * - case1. 숫자, 공백 외 타입의 값을 입력
+        * - case2. 범위를 벗어나는 숫자를 입력
+        * 
+        * 정상 입력 시, 선택한 프로모션만 적용하여 decorate 적용
+        */
+
+        System.out.println("\n적용할 할인을 선택해주세요.");
+        for (int i = 0; i < discounts.size(); i++) {
+            System.out.printf("%d. %s%n", i + 1, discounts.get(i).getDisplayName());
+        }
+        System.out.println("(공백으로 구분하여 입력, 예: 1 2 4)");
+
+        List<Integer> selectedIndexes = new ArrayList<>();
+
+        while (true) {
+            System.out.print("선택: ");
+            String input = scanner.nextLine().trim();
+
+            // 숫자/공백만 허용
+            if (!input.matches("[0-9 ]+")) {
+                System.out.println("오류: 숫자와 공백만 입력하세요. 예: 1 2 3");
+                continue;
+            }
+
+            String[] parts = input.split("\\s+");
+            selectedIndexes.clear();
+            boolean valid = true;
+
+            for (String p : parts) {
+                if (p.isEmpty()) continue;
+                try {
+                    int idx = Integer.parseInt(p);
+                    if (idx < 1 || idx > discounts.size()) {
+                        System.out.println("오류: " + idx + "번은 1~" + discounts.size() + " 범위를 벗어납니다.");
+                        valid = false;
+                        break;
+                    }
+                    if (!selectedIndexes.contains(idx - 1)) {
+                        selectedIndexes.add(idx - 1);
+                    }
+                } catch (NumberFormatException e) {
+                    System.out.println("오류: 숫자만 입력하세요.");
+                    valid = false;
+                    break;
+                }
+            }
+
+            if (!valid || selectedIndexes.isEmpty()) {
+                System.out.println("오류: 올바른 번호를 다시 입력해주세요.");
+                continue;
+            }
+
+            System.out.println("선택한 할인:");
+            for (int idx : selectedIndexes) {
+                System.out.println("- " + discounts.get(idx).getDisplayName());
+            }
+
+            System.out.print("이대로 진행하시겠습니까? (Y/N): ");
+            String confirmed = scanner.nextLine().trim().toUpperCase();
+            if (confirmed.equals("Y")) 
+                break;
+            else System.out.println("다시 선택해주세요.");
+        }
+        Fee finalFee = rental.calculateFinalFee(chosenStrategy, discounts, selectedIndexes);
         BigDecimal cost = finalFee.getFinalCost();
 
-        // --- 결제 프로세스 호출부 (Placeholder) ---
-        // TODO: 아래 결제 로직은 향후 Rental 클래스의 processPaymentFlow 메서드로 이동.
-        System.out.println("[결제 시도] ...");
+        System.out.printf("최종 결제금액: %s원%n", cost.setScale(0, RoundingMode.HALF_UP).toPlainString());
 
-        // TODO: User 클래스에 getPaymentMethods() 추가하고, 실제 사용자 결제 정보 가져오기.
+
+        
+        // <결제 프로세스 시작>
+        System.out.println("[결제 시작]");
+
+        // 임시 추가, 구현 후 삭제
+        if (this.currentUser != null) {
+            this.currentUser.addPaymentMethod(new PaymentMethod("0000-0000-0000-0000", "12/25"));
+            this.currentUser.addPaymentMethod(new PaymentMethod("1111-1111-1111-1111", "11/25"));
+            System.out.println("[테스트용] 임시 결제수단 2개가 등록되었습니다.");
+        }
+        
+        // 사용 가능한 결제수단 목록 가져오기
+        List<PaymentMethod> methods = rental.getUser().getPaymentMethods();
+        if (methods.isEmpty()) {
+            System.out.println("오류: 등록된 결제수단이 없습니다. 결제를 진행할 수 없습니다.");
+            return;
+        }
+
+        // 결제수단 출력
+        System.out.println("사용 가능한 결제수단:");
+        for (int i = 0; i < methods.size(); i++) {
+            System.out.printf("%d. %s%n", i + 1, methods.get(i));
+        }
+
+        int chose = 1;
+        while(true){
+            chose = 1;
+            System.out.print("결제수단 선택 (기본 1): ");
+            
+            try {
+                chose = Integer.parseInt(scanner.nextLine());
+            } catch (NumberFormatException ignored) {continue;}
+
+            if (chose < 1 || chose > methods.size()){
+                System.out.printf("오류: 1 ~ %d 사이의 숫자를 입력하세요.%n", methods.size());
+                continue;
+            } 
+            PaymentMethod selected = methods.get(chose - 1);
+
+            // Rental 내부 결제 로직 호출
+            boolean success = rental.processPayment(selected, cost);
+
+            if (success){
+                System.out.println("결제가 성공적으로 완료되었습니다!");
+                break;
+            }
+                System.out.println("결제 실패. 다시 시도해주세요.");
+        }
+
+        // --- 결제 프로세스 호출부 (Placeholder) --- "update --> 2025.11.10"
+        // TODO: 아래 결제 로직은 향후 Rental 클래스의 processPaymentFlow 메서드로 이동.
+        /* TODO: User 클래스에 getPaymentMethods() 추가하고, 실제 사용자 결제 정보 가져오기.
         // PaymentMethod userPaymentMethod = rental.getUser().getPaymentMethods().get(0); // 예시 코드
 
         // TODO: Payment 클래스에 setAmount(BigDecimal amount) 메서드 추가.
@@ -272,7 +402,7 @@ public class KickboardRentalService {
         // } else {
         //     System.out.println(">> 오류: 결제에 실패했습니다.");
         // }
-        // --- 결제 프로세스 종료 ---
+        // --- 결제 프로세스 종료 --- */
 
         rental.getVehicle().lock();
 
