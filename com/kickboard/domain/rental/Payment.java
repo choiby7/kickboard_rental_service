@@ -5,15 +5,16 @@ import com.kickboard.domain.user.PaymentMethod;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Objects;
+import java.util.Random; // 결제 실패 구현 위한 random.
 
 public class Payment {
 
     /**
-    * Payment.java	: 요금 결재 클래스 payment 초기 구현
+    * Payment.java	: setamout 및 processPayment 구현
     * @author	: Minsu Kim
     * @email	: minsk05151@gmail.com
-    * @version	: 1.0
-    * @date	: 2025.10.10
+    * @version	: 1.1
+    * @date	: 2025.11.10
     */
     private final String paymentId;
     private final String rentalId;
@@ -29,17 +30,27 @@ public class Payment {
         this.status = PaymentStatus.FAILED; // 초기 상태
     }
 
-    public boolean processPayment() {
+    public boolean processPaymentCheck() {
         if (amount == null) throw new IllegalStateException("amount not set"); // amount가 null일 경우
-        if (paymentMethod.getCardNumber() == null || paymentMethod.getCvc() == null) throw new IllegalStateException("card info wrong");
-        // 카드번호 값이 존재하지 않을 경우. 
+        if (paymentMethod.getCardNumber() == null || paymentMethod.getCvc() == null) throw new IllegalStateException("card info wrong"); // 카드번호 값이 존재하지 않을 경우.
+        
+        // 임시: 50% 확률로 결제 실패 (잔액 부족)
+        Random rand = new Random();
+        boolean hasEnoughBalance = rand.nextBoolean(); // true or false (50% 확률)
 
-        // 결재 불가한 케이스를 작성
-        // ex) 카드의 잔액 부족
-
-        // 일단 결재 성공한다는 가정
+        if (!hasEnoughBalance) { // 결제 실패 
+            this.status = PaymentStatus.FAILED;
+            this.transactionDate = LocalDateTime.now();
+            return false;
+        }
+        // 결제 성공
         this.transactionDate = LocalDateTime.now();
         this.status = PaymentStatus.SUCCESS;
         return this.status == PaymentStatus.SUCCESS;
     }
+
+    public void setAmount(BigDecimal amount){ // 최종 요금 호출
+        this.amount = amount;
+    }
+
 }

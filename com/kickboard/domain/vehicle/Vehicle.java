@@ -60,5 +60,10 @@ public class Vehicle implements Serializable{
   public VehicleStatus getStatus() { return status; }
   public String getCurrentLocation() { return currentLocation; }
   public int getBatteryLevel() { return batteryLevel; }
+
+  // setters (시뮬레이션 연동을 위해 추가)
+  public void setCurrentLocation(String currentLocation) {
+      this.currentLocation = currentLocation;
+  }
   
 }

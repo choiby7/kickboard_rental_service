@@ -23,4 +23,9 @@ public class BaseFee implements Fee {
     public BigDecimal getFinalCost() {
         return this.amount;
     }
+
+    @Override // getDisplayName 추가
+    public String getDisplayName() {
+        return "__BaseFee__";
+    }
 }

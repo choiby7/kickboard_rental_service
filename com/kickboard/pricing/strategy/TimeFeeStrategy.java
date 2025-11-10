@@ -5,6 +5,7 @@ import com.kickboard.domain.rental.RentalInfo;
 
 import java.math.BigDecimal;
 import java.time.Duration;
+import java.time.LocalDateTime;
 
 /**
  * TimeFeeStrategy.java : 시간 기반 요금 계산 전략 (분당 ???원)
@@ -25,10 +26,11 @@ public class TimeFeeStrategy implements FeeStrategy {
      */
     @Override
     public BigDecimal calculateFee(Rental rental) {
-        if (rental.getEndTime() == null) {
-            return BigDecimal.ZERO; // 아직 운행 종료 전이면 0원
+        LocalDateTime actualEndTime = rental.getEndTime();
+        if (actualEndTime == null) {
+            actualEndTime = LocalDateTime.now(); // 아직 반납 전이면 현재 시간을 기준으로 계산
         }
-        long minutes = Duration.between(rental.getStartTime(), rental.getEndTime()).toMinutes();
+        long minutes = Duration.between(rental.getStartTime(), actualEndTime).toMinutes();
         return RATE_PER_MINUTE.multiply(BigDecimal.valueOf(minutes));
     }
 

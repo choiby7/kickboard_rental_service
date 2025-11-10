@@ -5,16 +5,18 @@ import java.math.BigDecimal;
 import com.kickboard.pricing.Fee;
 
 /**
- * CardDiscountDecorator.java	: 카드 결제 시 할인 적용 데코레이터 - PromotionDecorator를 상속받아 카드사별 할인율을 적용
- * @author	: Mingwan Kim
- * @email	: steven3407115@dankook.ac.kr
+ * CouponDiscountDecorator.java	: 쿠폰 사용 시 할인 적용 데코레이터 - PromotionDecorator를 상속받아 쿠폰 할인을 적용
+ * @author	: Minsu Kim
+ * @email	: minsk0515@dankook.ac.kr
  * @version	: 1.0
- * @date	: 2025.10.07
+ * @date	: 2025.11.10
  */
-public class CardDiscountDecorator extends PromotionDecorator {
+public class CouponDiscountDecorator extends PromotionDecorator {
 
-	//@param cardCompany - 카드사 이름
-    private final String cardCompany;
+    //couponName - 쿠폰 이름
+    private final String couponName;
+	//couponId - 쿠폰ID
+    private final String couponId;
     //@param discountRate - 할인율
     private final BigDecimal discountRate;
 
@@ -22,17 +24,18 @@ public class CardDiscountDecorator extends PromotionDecorator {
      * 생성자
      * @param decoratedFee - 할인 적용 대상 Fee 객체
      */
-    public CardDiscountDecorator(Fee decoratedFee, String cardCompany, BigDecimal discountRate) {
+    public CouponDiscountDecorator(Fee decoratedFee, String couponName, String couponId, BigDecimal discountRate) {
         super(decoratedFee);  //부모(PromotionDecorator)의 생성자 호출
-        this.cardCompany = cardCompany;
+        this.couponName = couponName;
+        this.couponId = couponId;
         this.discountRate = discountRate;
     }
 
-    // 복제 생성자 (decorator 과정에 필요)
-    public CardDiscountDecorator(Fee decoratedFee, CardDiscountDecorator original) {
-        this(decoratedFee, original.cardCompany, original.discountRate);
+    // 복제 생성자
+    public CouponDiscountDecorator(Fee decoratedFee, CouponDiscountDecorator original) {
+        this(decoratedFee, original.couponName, original.couponId, original.discountRate);
     }
-	
+
     /**
      * 최종 결제 금액 반환
      * 기본 요금에서 할인율을 적용한 금액을 반환
@@ -45,9 +48,13 @@ public class CardDiscountDecorator extends PromotionDecorator {
         return original.subtract(discount);
     }
 
-    @Override // getCardCompany -> 상위(fee)에서 정의된 getDisplayName으로 대체
+    public String getCouponId() {
+        return couponId;
+    }
+
+    @Override // 할인 정보 출력
     public String getDisplayName() {
-        return "카드 할인 (" + cardCompany + ")";
+        return "쿠폰 할인 (" + couponName + ")";
     }
 
     public BigDecimal getDiscountRate() {

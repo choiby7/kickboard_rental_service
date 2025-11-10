@@ -1,12 +1,6 @@
-/**
-* Rental.java	: Rental 초기 구현
-* @author	: Minsu Kim
-* @email	: minsk05151@gmail.com
-* @version	: 1.0
-* @date	: 2025.10.10
-*/
 package com.kickboard.domain.rental;
 
+import com.kickboard.domain.user.PaymentMethod;
 import com.kickboard.domain.user.User;
 import com.kickboard.domain.vehicle.Vehicle;
 import com.kickboard.pricing.BaseFee;
@@ -21,6 +15,14 @@ import java.util.List;
 import java.util.Objects;
 
 public class Rental implements Serializable{
+
+    /**
+    * Rental.java	: processPayment 및 CalculateFinalFee 구현 -> 사용자가 적용할 프로모션을 선택한 후 decorator로 적용
+    * @author	: Minsu Kim
+    * @email	: minsk05151@gmail.com
+    * @version	: 1.1
+    * @date	: 2025.11.10
+    */
 
     private final String rentalId;
     private final User user;
@@ -40,18 +42,39 @@ public class Rental implements Serializable{
         this.status = RentalStatus.ACTIVE;
     }
 
-    public void complete() {
+    public void complete(double finalTraveledDistance) {
         if (this.status != RentalStatus.ACTIVE) {
             return;
         }
         this.endTime = LocalDateTime.now();
         this.status = RentalStatus.COMPLETED;
-        double traveledDistance = 0.0; // 임시
-        this.rentalInfo = new RentalInfo(this.startTime, this.endTime, traveledDistance);
+        this.rentalInfo = new RentalInfo(this.startTime, this.endTime, finalTraveledDistance);
     }
 
-    public Fee calculateFinalFee(FeeStrategy strategy, List<PromotionDecorator> discounts) {
-        // 변경된 부분: this.rentalInfo 대신 this(Rental 객체 자신)를 전달
+    // 시뮬레이션으로부터 주행 거리를 업데이트하기 위한 메서드
+    public void updateTraveledDistance(double newDistance) {
+        // RentalInfo는 불변(immutable) 객체이므로 새로 생성하여 교체
+        this.rentalInfo = new RentalInfo(this.startTime, this.endTime, newDistance);
+    }
+
+    /**
+     * 결제 실패 등으로 인해 완료 상태를 되돌리는 롤백 메서드.
+     */
+    public void revertComplete() {
+        if (this.status != RentalStatus.COMPLETED) {
+            return;
+        }
+        this.status = RentalStatus.ACTIVE;
+        this.endTime = null;
+    }
+    public boolean processPayment(PaymentMethod method, BigDecimal cost) { // 결제 진행
+        Payment payment = new Payment("PAY-" + rentalId, rentalId, method);
+        payment.setAmount(cost);
+        return payment.processPaymentCheck(); // 결제 성공 시 true 반환
+    }
+    
+    public Fee calculateFinalFee(FeeStrategy strategy, List<PromotionDecorator> discounts, List<Integer> selectedIndexes) { // 최종 요금 계산
+
         BigDecimal base = strategy.calculateFee(this);
         if (base == null || base.signum() < 0) {
             throw new IllegalStateException("Base price must be a non-negative value.");
@@ -59,18 +82,16 @@ public class Rental implements Serializable{
 
         Fee fee = new BaseFee(base);
 
-        // TODO: 데코레이터 적용 로직 구현 필요
-        /*
-        if (discounts != null){
-            for (PromotionDecorator d : discounts) { 
-              if (d == null) continue;
-              fee = d.decorate(fee);
+        // 선택된 프로모션만 적용
+        for (int idx : selectedIndexes) {
+            if (idx >= 0 && idx < discounts.size()) {
+                PromotionDecorator d = discounts.get(idx);
+                fee = d.decorate(fee);
             }
         }
-        */
-
         return fee;
     }
+
 
     public String getRentalId() {
         return rentalId;
