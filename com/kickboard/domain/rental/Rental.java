@@ -55,7 +55,7 @@ public class Rental implements Serializable{
     public boolean processPayment(PaymentMethod method, BigDecimal cost) { // 결제 진행
         Payment payment = new Payment("PAY-" + rentalId, rentalId, method);
         payment.setAmount(cost);
-        return payment.processPayment(); // 결제 성공 시 true 반환
+        return payment.processPaymentCheck(); // 결제 성공 시 true 반환
     }
     
     public Fee calculateFinalFee(FeeStrategy strategy, List<PromotionDecorator> discounts, List<Integer> selectedIndexes) { // 최종 요금 계산
