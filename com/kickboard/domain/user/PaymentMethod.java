@@ -1,5 +1,7 @@
 package com.kickboard.domain.user;
 
+import java.io.Serializable;
+
 /**
  * class PaymentMethod.java
  * @author: Choi BeomYeon
