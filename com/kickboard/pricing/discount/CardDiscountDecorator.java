@@ -28,6 +28,11 @@ public class CardDiscountDecorator extends PromotionDecorator {
         this.discountRate = discountRate;
     }
 
+    // 복제 생성자 (decorator 과정에 필요)
+    public CardDiscountDecorator(Fee decoratedFee, CardDiscountDecorator original) {
+        this(decoratedFee, original.cardCompany, original.discountRate);
+    }
+	
     /**
      * 최종 결제 금액 반환
      * 기본 요금에서 할인율을 적용한 금액을 반환
@@ -40,8 +45,9 @@ public class CardDiscountDecorator extends PromotionDecorator {
         return original.subtract(discount);
     }
 
-    public String getCardCompany() {
-        return cardCompany;
+    @Override // getCardCompany -> 상위(fee)에서 정의된 getDisplayName으로 대체
+    public String getDisplayName() {
+        return "카드 할인 (" + cardCompany + ")";
     }
 
     public BigDecimal getDiscountRate() {
