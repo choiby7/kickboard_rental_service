@@ -309,7 +309,7 @@ public class KickboardRentalService {
         
         System.out.println("\n적용할 할인을 선택해주세요.");
         for (int i = 0; i < discounts.size(); i++) {
-            System.out.printf("%d. %s%n", i + 1, discounts.get(i).getDisplayName());
+            System.out.printf("%d. %s\n", i + 1, discounts.get(i).getDisplayName());
         }
         System.out.println("(공백으로 구분하여 입력, 예: 1 2)");
 
@@ -356,7 +356,7 @@ public class KickboardRentalService {
         }
         Fee finalFee = rental.calculateFinalFee(chosenStrategy, discounts, selectedIndexes);
         BigDecimal cost = finalFee.getFinalCost();
-        System.out.printf("최종 결제금액: %s원%n", cost.setScale(0, RoundingMode.HALF_UP).toPlainString());
+        System.out.printf("최종 결제금액: %s원\n", cost.setScale(0, RoundingMode.HALF_UP).toPlainString());
 
         System.out.println("[결제 시작]");
         List<PaymentMethod> methods = rental.getUser().getPaymentMethods();
@@ -371,7 +371,7 @@ public class KickboardRentalService {
         while (true) {
             System.out.println("사용 가능한 결제수단:");
             for (int i = 0; i < methods.size(); i++) {
-                System.out.printf("%d. %s%n", i + 1, methods.get(i));
+                System.out.printf("%d. %s\n", i + 1, methods.get(i));
             }
             System.out.print("결제수단 선택 (취소하려면 'c' 입력): ");
             String paymentInput = scanner.nextLine();
@@ -389,7 +389,7 @@ public class KickboardRentalService {
             }
 
             if (paymentChoice < 1 || paymentChoice > methods.size()){
-                System.out.printf("오류: 1 ~ %d 사이의 숫자를 입력하세요.%n", methods.size());
+                System.out.printf("오류: 1 ~ %d 사이의 숫자를 입력하세요.\n", methods.size());
                 continue;
             } 
             PaymentMethod selected = methods.get(paymentChoice - 1);
