@@ -12,11 +12,12 @@ import java.io.Serializable;
 public class PaymentMethod implements Serializable{ // implements Seriallizable 추가
     private final String cardNumber;
     private final String cvc;
-    private String alias; // 결제수단 별칭 추가
+    private final String alias; // 결제수단 별칭 추가
 
-    public PaymentMethod(String cardNumber, String cvc) {
+    public PaymentMethod(String cardNumber, String cvc, String alias) {
         this.cardNumber = cardNumber;
         this.cvc = cvc;
+        this.alias = alias;
     }
 
     public String getAlias() {
