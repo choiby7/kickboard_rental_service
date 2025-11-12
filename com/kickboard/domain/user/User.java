@@ -1,7 +1,9 @@
 package com.kickboard.domain.user;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 /**
  * class User: 사용자관련 정보 저장 도메인
@@ -17,6 +19,7 @@ public class User implements Serializable{
     private String email;
     private DriverLicense license;
     private List<PaymentMethod> paymentMethods;
+    private Map<String, BigDecimal> coupons;
 
     /**
      *
@@ -71,6 +74,14 @@ public class User implements Serializable{
 
     public DriverLicense getDriverLicense() {
         return this.license;
+    }
+
+    public Map<String, BigDecimal> getCoupons() {
+        return this.coupons;
+    }
+
+    public void setCoupons(Map<String, BigDecimal> coupons) {
+        this.coupons = coupons;
     }
 
     /**
