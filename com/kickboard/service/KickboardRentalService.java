@@ -144,7 +144,7 @@ public class KickboardRentalService {
                     }
                     updateAndDisplayDrivingStatus(this.currentUser);
                     break;
-                case "payment": // todo
+                case "payment": // todo - choiby
                     if (this.currentUser == null) {
                         System.out.println("오류: 로그인이 필요합니다.");
                         break;
@@ -411,7 +411,7 @@ public class KickboardRentalService {
         while (true) {
             System.out.println("사용 가능한 결제수단:");
             for (int i = 0; i < methods.size(); i++) {
-                System.out.printf("%d. %s\n", i + 1, methods.get(i));
+                System.out.printf("%d. %s\n", i + 1, methods.get(i).getAlias());
             }
             System.out.print("결제수단 선택 (취소하려면 'c' 입력): ");
             String paymentInput = scanner.nextLine();
@@ -491,16 +491,45 @@ public class KickboardRentalService {
         }
     }
 
-    private void paymentProcess(User currentUser2) {
-        
-        throw new UnsupportedOperationException("Unimplemented method 'paymentProcess'");
-    }
+    private void paymentProcess(User user) {
+        List<PaymentMethod> paymentMethods = user.getPaymentMethods();
+        System.out.println(" - 사용 가능한 결제 수단 : \n");
+        if (paymentMethods.isEmpty()) {
+            System.out.println("등록된 결제수단이 없습니다.");
+        } else {
+            for (PaymentMethod method : paymentMethods) {
+                System.out.println("별명: " + method.getAlias() + ", 카드번호: " + method.getCardNumber());
+            }
+        }
+        // 결제 수단 등록 
+        System.out.print("새 결제수단을 추가하시겠습니까? (y/n): ");
+        String input = scanner.nextLine();
+        if (input.equalsIgnoreCase("y")) {
+            System.out.print("카드 번호: ");
+            String cardNumber = scanner.nextLine();
+            System.out.print("CVC: ");
+            String cvc = scanner.nextLine();
+            System.out.print("결제 수단 별칭을 입력하세요 (예: '내 주카드'): ");
+            String alias = scanner.nextLine();
+            boolean added = userService.addPaymentMethod(user.getUserId(), cardNumber, cvc, alias);
+            if (added) {
+                // 최신 사용자 목록 동기화
+                this.users = userService.getAllUsers();
+                System.out.println("결제수단이 성공적으로 추가되었습니다.");
+                saveState();
+            } else {
+                System.out.println("오류: 결제수단 추가에 실패했습니다.");
+            }
+        } else {
+            System.out.println("결제수단 추가를 건너뜁니다.");
+        }
+}
 
-    private void addObserver(StatusObserver observer) {
+    public void addObserver(StatusObserver observer) {
         this.observers.add(observer);
     }
 
-    private void notifyObservers(StatusEvent e) {
+    public void notifyObservers(StatusEvent e) {
         for (StatusObserver observer : this.observers) {
             observer.onEvent(e);
         }

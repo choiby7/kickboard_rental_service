@@ -1,0 +1,17 @@
+[Users]
+userId,registeredAt,status
+aa,,ACTIVE
+
+[Vehicles]
+vehicleId,modelName,status,location,battery(%)
+KB001,Model S,AVAILABLE,"4,5",82
+KB002,Model A,AVAILABLE,"10,10",100
+KB003,Model T,AVAILABLE,"0,0",14
+
+[Rentals]
+rentalId,userId,vehicleId,startTime,endTime,status
+RNT-5b84853e,aa,KB001,2025-11-12T18:00:05.642623,2025-11-12T18:00:28.969849,COMPLETED
+
+[Meta]
+currentUserId
+aa

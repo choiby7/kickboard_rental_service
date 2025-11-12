@@ -136,15 +136,16 @@ public class UserService {
      * @param cvc CVC
      * @return true: 추가 성공, false: 사용자 없음
      */
-    public boolean addPaymentMethod(String userId, String cardNumber, String cvc) {
+    public boolean addPaymentMethod(String userId,String cardNumber, String cvc, String alias) {
         Objects.requireNonNull(userId, "userId");
         Objects.requireNonNull(cardNumber, "cardNumber");
         Objects.requireNonNull(cvc, "cvc");
+        Objects.requireNonNull(alias, "alias");
 
         User user = findUserById(userId);
         if (user == null) return false;
 
-        PaymentMethod method = new PaymentMethod(cardNumber, cvc);
+        PaymentMethod method = new PaymentMethod(cardNumber, cvc, alias);
         user.addPaymentMethod(method);
         return true;
     }
