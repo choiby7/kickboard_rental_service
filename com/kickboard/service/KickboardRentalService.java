@@ -85,7 +85,7 @@ public class KickboardRentalService {
         while (true) {
             String prompt = (this.currentUser == null)
                 ? "\n명령어를 입력하세요 (login, register, status, exit):"
-                : String.format("\n[%s님] 명령어를 입력하세요 (logout, whoami, status, rent, return, driving_status, exit):", this.currentUser.getUserId());
+                : String.format("\n[%s님] 명령어를 입력하세요 (logout, whoami, payment, status, rent, return, driving_status, exit):", this.currentUser.getUserId());
             System.out.println(prompt);
 
             String command = scanner.nextLine();
