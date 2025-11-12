@@ -127,10 +127,23 @@ public class KickboardSimulator {
 
     private void displayCurrentStatus() {
         // 콘솔 화면 지우기 (Windows의 'cls' 효과)
+        String os = System.getProperty("os.name").toLowerCase();
         try {
-            new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();
+            if (os.contains("win")) {
+                // Windows: cls
+                System.out.println("dhid");
+                new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();
+            } else {
+                // macOS/Linux: ANSI escape로 화면 지우기
+                System.out.print("\033[H\033[2J");
+                System.out.flush();
+                // 일부 터미널에서 ANSI 무시 시 'clear' 시도
+                new ProcessBuilder("sh", "-c", "clear").inheritIO().start().waitFor();
+            }
         } catch (IOException | InterruptedException e) {
-            // 콘솔 지우기 실패 시 무시
+            // 폴백: 여러 줄 출력
+            for (int i = 0; i < 50; i++) System.out.println();
+            Thread.currentThread().interrupt();
         }
         System.out.println("========== 킥보드 주행 시뮬레이션 ==========");
         System.out.printf("킥보드 ID: %s\n", vehicleId);

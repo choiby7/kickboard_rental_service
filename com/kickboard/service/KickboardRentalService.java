@@ -32,26 +32,28 @@ import java.util.concurrent.TimeUnit;
 
 public class KickboardRentalService {
 
-    private final List<User> users;
+    private List<User> users;
+    private User currentUser;
     private final List<Vehicle> kickboards;
     private final List<Rental> rentals;
     private final List<StatusObserver> observers;
     private final List<FeeStrategy> feeStrategies;
     private final Scanner scanner;
-    private User currentUser;
+    private final UserService userService;
 
     // 시뮬레이션 연동을 위한 변수 추가
     private static final Path SIMULATION_DIR = Paths.get("simulation");
     private static final Path DRIVING_STATUS_FILE = SIMULATION_DIR.resolve("driving_status.txt");
 
     public KickboardRentalService() {
-        this.users = new ArrayList<>();
         this.kickboards = new ArrayList<>();
         this.rentals = new ArrayList<>();
         this.observers = new ArrayList<>();
         this.feeStrategies = new ArrayList<>();
         this.scanner = new Scanner(System.in);
         this.currentUser = null;
+        this.userService = new UserService();
+        this.users = userService.getAllUsers();
 
         System.out.println("KickboardRentalService가 생성되었습니다.");
 
@@ -125,12 +127,7 @@ public class KickboardRentalService {
                     }
                     break;
                 case "register":
-                    System.out.println("-> 사용자 등록을 시작합니다.");
-                    System.out.print("사용할 ID: ");
-                    String userId = scanner.nextLine();
-                    System.out.print("사용할 비밀번호: ");
-                    String password = scanner.nextLine();
-                    registerUser(userId, password);
+                    registerUser();
                     break;
                 case "status":
                     System.out.println("--- 현재 킥보드 목록 ---");
@@ -169,6 +166,13 @@ public class KickboardRentalService {
                     }
                     updateAndDisplayDrivingStatus(this.currentUser);
                     break;
+                case "payment":
+                    if (this.currentUser == null) {
+                        System.out.println("오류: 로그인이 필요합니다.");
+                        break;
+                    }
+                    paymentProcess(this.currentUser);
+                    break; 
                 case "exit":
                 	saveState();
                     com.kickboard.persist.CsvExporter.exportToCsv(
@@ -184,15 +188,20 @@ public class KickboardRentalService {
         }
     }
 
-    public void registerUser(String userId, String password) {
-        for (User user : this.users) {
-            if (user.getUserId().equals(userId)) {
-                System.out.println("오류: '" + userId + "'는 이미 존재하는 ID입니다.");
-                return;
-            }
+    public void registerUser() {
+        // UserService에 모든 검증(중복, 형식)을 위임
+        System.out.println("-> 사용자 등록을 시작합니다.");
+        System.out.print("사용할 ID: ");
+        String userId = scanner.nextLine();
+        System.out.print("사용할 비밀번호: ");
+        String password = scanner.nextLine();
+        boolean created = userService.register(userId, password);
+        if (!created) {
+            System.out.println("오류: 사용자 등록 실패 (중복 ID 또는 형식 오류).");
+            return;
         }
-        User newUser = new User(userId, password);
-        this.users.add(newUser);
+        // 성공 시 최신 사용자 목록 동기화
+        this.users = userService.getAllUsers();
         System.out.println("'" + userId + "'님, 사용자 등록이 완료되었습니다.");
         saveState();
     }
@@ -230,7 +239,28 @@ public class KickboardRentalService {
 
             String command = String.format("java -cp bin com.kickboard.simulator.KickboardSimulator %s %d %d %d",
                 vehicle.getVehicleId(), startX, startY, vehicle.getBatteryLevel());
-            Runtime.getRuntime().exec("cmd /c start " + command);
+            String os = System.getProperty("os.name").toLowerCase();
+            if (os.contains("win")) {
+            // Windows: 새 콘솔 창 열기
+            new ProcessBuilder("cmd", "/c", "start", "cmd", "/k", command).start();
+            }
+
+            else if (os.contains("mac")) {
+                // macOS: Terminal에 새 창/탭으로 명령 실행
+                String projectDir = Paths.get("").toAbsolutePath().toString();
+                String scriptCmd = "cd '" + projectDir.replace("'", "'\\''") + "'; " + command;
+                // AppleScript로 Terminal에 전달
+                new ProcessBuilder(
+                    "osascript", "-e",
+                    "tell application \"Terminal\" to do script \"" + scriptCmd.replace("\"", "\\\"") + "\""
+                ).start();
+            }
+            try {
+                new ProcessBuilder("x-terminal-emulator", "-e", "bash", "-lc", command + "; exec bash").start();
+            } catch (IOException ignored) {
+                new ProcessBuilder("bash", "-lc", command + " &").start();
+            }
+
             System.out.println("[알림] 주행 시뮬레이터가 별도의 창에서 실행됩니다.");
 
         } catch (IOException | NumberFormatException e) {
@@ -449,6 +479,11 @@ public class KickboardRentalService {
         } catch (IOException e) {
             System.err.println("오류: 주행 정보를 읽어오지 못했습니다: " + e.getMessage());
         }
+    }
+
+    private void paymentProcess(User currentUser2) {
+        
+        throw new UnsupportedOperationException("Unimplemented method 'paymentProcess'");
     }
 
     public void addObserver(StatusObserver observer) {

@@ -57,8 +57,11 @@ public class UserService {
         if (findUserById(userId) != null) {
             return false; // 중복 ID
         }
+        if (userId.isEmpty() || password.isEmpty()) {
+            return false; // 빈 문자열 허용 안 함
+        }
         User user = new User(userId, password);
-        this.users.add(user);
+        users.add(user);
         return true;
     }
 
@@ -158,7 +161,7 @@ public class UserService {
     /**
      * 내부에 보관된 (registered) 모든 사용자(읽기용) 반환
      */
-    public List<User> listUsers() {
+    public List<User> getAllUsers() {
         return new ArrayList<>(this.users);
     }
 
