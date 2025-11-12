@@ -24,7 +24,7 @@ public class UserServiceTest {
     public void testRegisterAndAuthenticate() {
         userService = new UserService();
 
-        System.out.println(userService.listUsers());
+        System.out.println(userService.getAllUsers());
 
         String userId = "testUser";
         String password = "securePass";     
@@ -41,7 +41,7 @@ public class UserServiceTest {
 
         System.out.println("회원가입 성공");
 
-        System.out.println(userService.listUsers());
+        System.out.println(userService.getAllUsers());
 
         // 로그인 테스트
         if (userService.authenticate(userId, password)) {
@@ -55,7 +55,7 @@ public class UserServiceTest {
         userService.logout();
         System.out.println("로그아웃 성공");
         System.out.println("현재 로그인된 사용자: " + userService.getCurrentUser());
-        System.out.println(userService.listUsers());
+        System.out.println(userService.getAllUsers());
 
 
         // 결제수단 추가 테스트
@@ -69,13 +69,13 @@ public class UserServiceTest {
         userService.addPaymentMethod(userService.getCurrentUser().getUserId(), "4321-5678-9012-3456", "11/25");
         System.out.println("결제수단 추가 성공");
         System.out.println(userService.getCurrentUser().getPaymentMethods());
-        System.out.println(userService.listUsers()); 
+        System.out.println(userService.getAllUsers()); 
 
         // 운전면허 추가 테스트
         userService.registerDriverLicense(userService.getCurrentUser().getUserId(), "D12345678912");
         System.out.println("운전면허 추가 성공");
         System.out.println(userService.getCurrentUser().getDriverLicense());
-        System.out.println(userService.listUsers());
+        System.out.println(userService.getAllUsers());
 
         
     }
