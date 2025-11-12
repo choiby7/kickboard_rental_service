@@ -92,23 +92,7 @@ public class KickboardRentalService {
 
             switch (command) {
                 case "login":
-                    if (this.currentUser != null) {
-                        System.out.println("오류: 이미 로그인되어 있습니다. 먼저 로그아웃해주세요.");
-                        break;
-                    }
-                    System.out.println("-> 로그인을 시작합니다.");
-                    System.out.print("사용자 ID: ");
-                    String loginId = scanner.nextLine();
-                    System.out.print("비밀번호: ");
-                    String loginPassword = scanner.nextLine();
-                    User userToLogin = findUserById(loginId);
-                    if (userToLogin != null && userToLogin.checkPassword(loginPassword)) {
-                        this.currentUser = userToLogin;
-                        saveState();
-                        System.out.println("로그인 성공! " + this.currentUser.getUserId() + "님, 환영합니다.");
-                    } else {
-                        System.out.println("오류: ID 또는 비밀번호가 일치하지 않습니다.");
-                    }
+                    login();
                     break;
                 case "logout":
                     if (this.currentUser == null) {
@@ -185,6 +169,25 @@ public class KickboardRentalService {
                     System.out.println("알 수 없는 명령어입니다. 다시 입력해주세요.");
                     break;
             }
+        }
+    }
+    public void login() {
+        if (this.currentUser != null) {
+            System.out.println("오류: 이미 로그인되어 있습니다. 먼저 로그아웃해주세요.");
+            return;
+        }
+        System.out.println("-> 로그인을 시작합니다.");
+        System.out.print("사용자 ID: ");
+        String loginId = scanner.nextLine();
+        System.out.print("비밀번호: ");
+        String loginPassword = scanner.nextLine();
+        User userToLogin = findUserById(loginId);
+        if (userToLogin != null && userToLogin.checkPassword(loginPassword)) {
+            this.currentUser = userToLogin;
+            saveState();
+            System.out.println("로그인 성공! " + this.currentUser.getUserId() + "님, 환영합니다.");
+        } else {
+            System.out.println("오류: ID 또는 비밀번호가 일치하지 않습니다.");
         }
     }
 
