@@ -95,13 +95,7 @@ public class KickboardRentalService {
                     login();
                     break;
                 case "logout":
-                    if (this.currentUser == null) {
-                        System.out.println("오류: 로그인 상태가 아닙니다.");
-                    } else {
-                        System.out.println(this.currentUser.getUserId() + "님이 로그아웃하셨습니다.");
-                        this.currentUser = null;
-                        saveState();
-                    }
+                    logout();
                     break;
                 case "whoami":
                     if (this.currentUser != null) {
@@ -150,7 +144,7 @@ public class KickboardRentalService {
                     }
                     updateAndDisplayDrivingStatus(this.currentUser);
                     break;
-                case "payment":
+                case "payment": // todo
                     if (this.currentUser == null) {
                         System.out.println("오류: 로그인이 필요합니다.");
                         break;
@@ -171,7 +165,9 @@ public class KickboardRentalService {
             }
         }
     }
-    public void login() {
+    // ================= Event Loop Menu Functions ===============
+    // login
+    private void login() {
         if (this.currentUser != null) {
             System.out.println("오류: 이미 로그인되어 있습니다. 먼저 로그아웃해주세요.");
             return;
@@ -190,8 +186,19 @@ public class KickboardRentalService {
             System.out.println("오류: ID 또는 비밀번호가 일치하지 않습니다.");
         }
     }
+    // logout
+    private void logout() {
+        if (this.currentUser == null) {
+            System.out.println("오류: 로그인 상태가 아닙니다.");
+        } else {
+            System.out.println(this.currentUser.getUserId() + "님이 로그아웃하셨습니다.");
+            this.currentUser = null;
+            saveState();
+        }
+    }
 
-    public void registerUser() {
+    // register user
+    private void registerUser() {
         // UserService에 모든 검증(중복, 형식)을 위임
         System.out.println("-> 사용자 등록을 시작합니다.");
         System.out.print("사용할 ID: ");
@@ -209,7 +216,7 @@ public class KickboardRentalService {
         saveState();
     }
 
-    public void rentKickboard(User user, String kickboardId) {
+    private void rentKickboard(User user, String kickboardId) {
         Vehicle vehicle = findVehicleById(kickboardId);
         if (vehicle == null) {
             System.out.println("오류: 존재하지 않는 킥보드 ID입니다.");
@@ -280,7 +287,7 @@ public class KickboardRentalService {
         saveState();
     }
 
-    public void returnKickboard(User user) {
+    private void returnKickboard(User user) {
         Rental rental = findActiveRentalByUserId(user.getUserId());
         if (rental == null) {
             System.out.println("오류: 현재 대여 중인 킥보드가 없습니다.");
@@ -489,11 +496,11 @@ public class KickboardRentalService {
         throw new UnsupportedOperationException("Unimplemented method 'paymentProcess'");
     }
 
-    public void addObserver(StatusObserver observer) {
+    private void addObserver(StatusObserver observer) {
         this.observers.add(observer);
     }
 
-    public void notifyObservers(StatusEvent e) {
+    private void notifyObservers(StatusEvent e) {
         for (StatusObserver observer : this.observers) {
             observer.onEvent(e);
         }
