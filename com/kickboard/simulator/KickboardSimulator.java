@@ -55,47 +55,48 @@ public class KickboardSimulator {
         simulator.run();
     }
 
+    private enum State { DRIVING, LOCKED }
+    private State currentState = State.DRIVING;
+
     public void run() {
         System.out.println("시뮬레이터 시작: " + vehicleId + " (초기 위치: " + currentX + "," + currentY + ")");
-        System.out.println("--------------------------------------------------");
+        printStatus();
 
         try {
-            // 통신용 디렉토리 생성
-            if (!Files.exists(SIMULATION_DIR)) {
-                Files.createDirectories(SIMULATION_DIR);
-            }
-
-            // 초기 상태 파일 작성
             writeDrivingStatus("DRIVING");
 
             while (true) {
-                // 1초 대기
-                TimeUnit.SECONDS.sleep(1);
-
-                // driving_status.txt 파일 읽기 (메인 프로그램의 명령 확인)
-                String statusLine = readDrivingStatusFile();
-                String[] parts = statusLine.split(",");
-                String mainProgramStatus = parts[0];
-
-                if ("STOP_REQUESTED".equals(mainProgramStatus)) {
-                    System.out.println("메인 프로그램으로부터 종료 요청 수신.");
-                    writeDrivingStatus("STOPPED"); // 최종 상태 기록 후 종료
-                    break; // 루프 종료
+                // 1. 메인 앱의 명령 확인
+                String command = readDrivingStatusFile().split(",")[0];
+                if ("RETURN_REQUESTED".equals(command) && currentState == State.DRIVING) {
+                    currentState = State.LOCKED;
+                    System.out.println("\n[알림] 반납이 요청되었습니다. 메인 앱에서 결제를 완료해주세요.");
+                    System.out.println("더 이상 주행할 수 없습니다.");
+                    // 최종 상태를 한 번 더 기록
+                    writeDrivingStatus("LOCKED");
+                } else if ("SHUTDOWN".equals(command)) {
+                    System.out.println("\n[알림] 결제가 완료되어 시뮬레이터를 종료합니다.");
+                    break;
                 }
 
-                // 사용자 입력 처리 (w,a,s,d,status)
-                displayCurrentStatus();
-                System.out.print("방향 입력 (w/a/s/d): ");
-                String input = simulatorScanner.nextLine().trim().toLowerCase();
+                // 2. 사용자 입력 확인 (논블로킹)
+                if (System.in.available() > 0) {
+                    String input = simulatorScanner.nextLine().trim().toLowerCase();
 
-                if (Arrays.asList("w", "a", "s", "d").contains(input)) {
-                    moveKickboard(input);
-                    writeDrivingStatus("DRIVING"); // 이동 후 상태 업데이트
-                } else {
-                    System.out.println("잘못된 입력입니다. w,a,s,d를 입력해주세요.");
+                    if (currentState == State.DRIVING) {
+                        if (java.util.Arrays.asList("w", "a", "s", "d").contains(input)) {
+                            moveKickboard(input);
+                            writeDrivingStatus("DRIVING");
+                            printStatus(); // 이동 시에만 상태 출력
+                        } else {
+                            System.out.print("잘못된 입력입니다. (w/a/s/d): ");
+                        }
+                    } else { // LOCKED 상태일 때
+                        System.out.println("\n[알림] 반납이 요청되어 주행할 수 없습니다. 메인 앱에서 결제를 완료해주세요.");
+                    }
                 }
-                // 화면 갱신 후 3초 지연
-                TimeUnit.SECONDS.sleep(3);
+
+                TimeUnit.MILLISECONDS.sleep(200); // CPU 사용량 감소를 위한 짧은 대기
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -104,53 +105,29 @@ public class KickboardSimulator {
             System.err.println("파일 통신 오류: " + e.getMessage());
         } finally {
             simulatorScanner.close();
-            System.out.println("시뮬레이터 종료.");
+            System.out.println("시뮬레이터가 안전하게 종료되었습니다.");
         }
     }
 
     private void moveKickboard(String direction) {
         int oldX = currentX, oldY = currentY;
         switch (direction) {
-            case "w": currentY++; break; // 위
-            case "s": currentY--; break; // 아래
-            case "a": currentX--; break; // 왼쪽
-            case "d": currentX++; break; // 오른쪽
+            case "w": currentY++; break;
+            case "s": currentY--; break;
+            case "a": currentX--; break;
+            case "d": currentX++; break;
         }
-        // TODO: 지도 경계 확인 로직 추가
-
-        traveledDistance += 3.0; // 1회 이동당 3.0m 증가
-        batteryLevel = Math.max(0, batteryLevel - 1); // 1회 이동당 배터리 1% 감소
-
-        System.out.printf("[%s] 이동: (%d,%d) -> (%d,%d), 주행거리: %.1fm, 배터리: %d%%\n",
-            vehicleId, oldX, oldY, currentX, currentY, traveledDistance, batteryLevel);
+        traveledDistance += 3.0;
+        batteryLevel = Math.max(0, batteryLevel - 1);
+        System.out.printf("\n[%s] 이동: (%d,%d) -> (%d,%d)\n", vehicleId, oldX, oldY, currentX, currentY);
     }
 
-    private void displayCurrentStatus() {
-        // 콘솔 화면 지우기 (Windows의 'cls' 효과)
-        String os = System.getProperty("os.name").toLowerCase();
-        try {
-            if (os.contains("win")) {
-                // Windows: cls
-                System.out.println("dhid");
-                new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();
-            } else {
-                // macOS/Linux: ANSI escape로 화면 지우기
-                System.out.print("\033[H\033[2J");
-                System.out.flush();
-                // 일부 터미널에서 ANSI 무시 시 'clear' 시도
-                new ProcessBuilder("sh", "-c", "clear").inheritIO().start().waitFor();
-            }
-        } catch (IOException | InterruptedException e) {
-            // 폴백: 여러 줄 출력
-            for (int i = 0; i < 50; i++) System.out.println();
-            Thread.currentThread().interrupt();
-        }
-        System.out.println("========== 킥보드 주행 시뮬레이션 ==========");
-        System.out.printf("킥보드 ID: %s\n", vehicleId);
-        System.out.printf("현재 위치: (%d, %d)\n", currentX, currentY);
-        System.out.printf("주행 거리: %.1fm\n", traveledDistance);
-        System.out.printf("배터리 잔량: %d%%\n", batteryLevel);
+    private void printStatus() {
+        System.out.println("========== 킥보드 주행 정보 ==========");
+        System.out.printf("ID: %s | 위치: (%d, %d) | 주행 거리: %.1fm | 배터리: %d%%\n",
+            vehicleId, currentX, currentY, traveledDistance, batteryLevel);
         System.out.println("=========================================");
+        System.out.print("방향 입력 (w/a/s/d): ");
     }
 
     private String readDrivingStatusFile() throws IOException {

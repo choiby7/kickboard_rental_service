@@ -1,8 +1,9 @@
-package com.kickboard.persist;
+package com.kickboard.repository;
 
 import com.kickboard.domain.rental.Rental;
 import com.kickboard.domain.user.User;
 import com.kickboard.domain.vehicle.Vehicle;
+import com.kickboard.repository.AppState;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;

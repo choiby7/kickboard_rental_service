@@ -99,6 +99,31 @@ public class UserService {
         return this.currentUser;
     }
 
+    /**
+     * 외부(e.g. 상태 파일)에서 사용자 목록을 로드합니다.
+     * @param users 로드할 사용자 목록
+     */
+    public void loadUsers(List<User> users) {
+        if (users == null) return;
+        this.users.clear();
+        this.users.addAll(users);
+    }
+
+    /**
+     * ID만으로 사용자를 인증합니다. (상태 복원용)
+     * @param userId 사용자 ID
+     * @return 인증 성공 시 true
+     */
+    public boolean authenticateWithId(String userId) {
+        if (userId == null) return false;
+        User user = findUserById(userId);
+        if (user != null) {
+            this.currentUser = user;
+            return true;
+        }
+        return false;
+    }
+
     // --------------------------- 운전면허 관리 ---------------------------
 
     /**
@@ -152,7 +177,7 @@ public class UserService {
 
     // --------------------------- 헬퍼 ---------------------------
 
-    private User findUserById(String userId) {
+    public User findUserById(String userId) {
         for (User u : this.users) {
             if (u.getUserId().equals(userId)) return u;
         }

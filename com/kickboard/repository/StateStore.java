@@ -1,5 +1,6 @@
-package com.kickboard.persist;
+package com.kickboard.repository;
 
+import com.kickboard.repository.AppState;
 import java.io.*;
 import java.nio.file.*;
 

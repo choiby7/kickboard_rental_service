@@ -3,10 +3,10 @@ package com.kickboard.domain.rental;
 import com.kickboard.domain.user.PaymentMethod;
 import com.kickboard.domain.user.User;
 import com.kickboard.domain.vehicle.Vehicle;
-import com.kickboard.pricing.BaseFee;
-import com.kickboard.pricing.Fee;
-import com.kickboard.pricing.discount.PromotionDecorator;
-import com.kickboard.pricing.strategy.FeeStrategy;
+import com.kickboard.domain.pricing.BaseFee;
+import com.kickboard.domain.pricing.Fee;
+import com.kickboard.domain.pricing.discount.PromotionDecorator;
+import com.kickboard.domain.pricing.strategy.FeeStrategy;
 
 import java.io.Serializable;
 import java.math.BigDecimal;

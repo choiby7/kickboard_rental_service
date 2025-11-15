@@ -1,8 +1,8 @@
-package com.kickboard.pricing.discount;
+package com.kickboard.domain.pricing.discount;
 
 
 import java.math.BigDecimal;
-import com.kickboard.pricing.Fee;
+import com.kickboard.domain.pricing.Fee;
 
 /**
  * CouponDiscountDecorator.java	: 쿠폰 사용 시 할인 적용 데코레이터 - PromotionDecorator를 상속받아 쿠폰 할인을 적용

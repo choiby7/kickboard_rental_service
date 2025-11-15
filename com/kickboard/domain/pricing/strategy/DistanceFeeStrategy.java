@@ -1,7 +1,6 @@
-package com.kickboard.pricing.strategy;
+package com.kickboard.domain.pricing.strategy;
 
 import com.kickboard.domain.rental.Rental;
-import com.kickboard.domain.rental.RentalInfo;
 import java.math.BigDecimal;
 
 /**

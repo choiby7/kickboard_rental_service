@@ -1,4 +1,4 @@
-package com.kickboard.notification;
+package com.kickboard.domain.notification;
 
 import com.kickboard.domain.rental.Rental;
 import com.kickboard.domain.user.User;

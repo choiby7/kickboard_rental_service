@@ -5,14 +5,14 @@
  * @version	: 1.0
  * @date	: 2025.10.07
  */
-package com.kickboard.pricing.strategy;
+package com.kickboard.domain.pricing.strategy;
 
-import com.kickboard.domain.rental.RentalInfo;
+import com.kickboard.domain.rental.Rental;
 import java.math.BigDecimal;
 
 public interface FeeStrategy {
 
-    BigDecimal calculateFee(com.kickboard.domain.rental.Rental rental);
+    BigDecimal calculateFee(Rental rental);
 
     String name();
 }

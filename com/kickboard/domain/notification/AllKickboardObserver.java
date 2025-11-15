@@ -1,4 +1,4 @@
-package com.kickboard.notification;
+package com.kickboard.domain.notification;
 
 /**
  * AllKickboardObserver.java : 모든 킥보드 관련 이벤트를 감시하고 콘솔에 출력하는 옵저버

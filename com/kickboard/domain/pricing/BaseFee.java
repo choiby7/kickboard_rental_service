@@ -1,4 +1,4 @@
-package com.kickboard.pricing;
+package com.kickboard.domain.pricing;
 
 import java.math.BigDecimal;
 

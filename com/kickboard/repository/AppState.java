@@ -1,4 +1,4 @@
-package com.kickboard.persist;
+package com.kickboard.repository;
 
 import com.kickboard.domain.rental.Rental;
 import com.kickboard.domain.user.User;

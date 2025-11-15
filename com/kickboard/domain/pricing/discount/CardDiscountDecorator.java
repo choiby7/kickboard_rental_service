@@ -1,8 +1,8 @@
-package com.kickboard.pricing.discount;
+package com.kickboard.domain.pricing.discount;
 
 
 import java.math.BigDecimal;
-import com.kickboard.pricing.Fee;
+import com.kickboard.domain.pricing.Fee;
 
 /**
  * CardDiscountDecorator.java	: 카드 결제 시 할인 적용 데코레이터 - PromotionDecorator를 상속받아 카드사별 할인율을 적용

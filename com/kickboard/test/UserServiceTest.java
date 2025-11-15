@@ -1,4 +1,4 @@
-package com.kickboard;
+package com.kickboard.test;
 
 import com.kickboard.service.UserService;
 
