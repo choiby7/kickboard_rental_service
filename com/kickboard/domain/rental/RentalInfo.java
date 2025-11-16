@@ -1,6 +1,7 @@
 package com.kickboard.domain.rental;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
