@@ -1,7 +1,7 @@
 package com.kickboard.ui;
 
 import com.kickboard.domain.rental.Rental;
-import com.kickboard.domain.user.PaymentMethod;
+import com.kickboard.domain.rental.RentalInfo;
 import com.kickboard.domain.user.PaymentMethod; 
 import com.kickboard.domain.user.User;
 import com.kickboard.domain.vehicle.Vehicle;
