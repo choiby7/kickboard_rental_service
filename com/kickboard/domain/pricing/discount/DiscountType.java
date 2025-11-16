@@ -1,5 +1,4 @@
-package com.kickboard.pricing.discount;
-
+package com.kickboard.domain.pricing.discount; 
 /**
  * enumeration DiscountType
  * @author: Choi BeomYeon
