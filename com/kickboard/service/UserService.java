@@ -4,6 +4,7 @@ import com.kickboard.domain.user.DriverLicense;
 import com.kickboard.domain.user.PaymentMethod;
 import com.kickboard.domain.user.User;
 
+import java.math.BigDecimal; 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -175,6 +176,15 @@ public class UserService {
         return true;
     }
 
+    // --------------------------- 쿠폰 관리 ---------------------------
+    public boolean addCouponToUser(String userId, String couponId, BigDecimal rate) {
+        User user = findUserById(userId);
+        if (user == null) return false;
+
+        user.addCoupon(couponId, rate);
+        return true;
+    }
+    
     // --------------------------- 헬퍼 ---------------------------
 
     public User findUserById(String userId) {
