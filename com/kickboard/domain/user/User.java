@@ -113,5 +113,12 @@ public class User implements Serializable{
         if (this.paymentMethods == null) return java.util.Collections.emptyList();
         return java.util.Collections.unmodifiableList(this.paymentMethods);
     }
-    
+
+    // 사용자에 쿠폰을 추가합니다. 
+    public void addCoupon(String couponId, BigDecimal rate) {
+        if (this.coupons == null) {
+            this.coupons = new HashMap<>();
+        }
+        this.coupons.put(couponId, rate);
+    }
 }
