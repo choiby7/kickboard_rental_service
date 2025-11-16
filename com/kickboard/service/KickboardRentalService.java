@@ -11,6 +11,7 @@ import com.kickboard.domain.notification.StatusObserver;
 import com.kickboard.domain.pricing.Fee;
 import com.kickboard.domain.pricing.discount.CardDiscountDecorator;
 import com.kickboard.domain.pricing.discount.CouponDiscountDecorator;
+import com.kickboard.domain.pricing.discount.DistanceDiscountDecorator; 
 import com.kickboard.domain.pricing.discount.PromotionDecorator;
 import com.kickboard.domain.pricing.strategy.DistanceFeeStrategy;
 import com.kickboard.domain.pricing.strategy.FeeStrategy;
@@ -29,6 +30,7 @@ import java.nio.file.StandardOpenOption;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map; 
 import java.util.Scanner;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -45,6 +47,12 @@ public class KickboardRentalService {
     // 시뮬레이션 연동을 위한 변수 추가
     private static final Path SIMULATION_DIR = Paths.get("simulation");
     private static final Path DRIVING_STATUS_FILE = SIMULATION_DIR.resolve("driving_status.txt");
+
+    // 카드 할인율 Map 추가 (회사 정책, 강제 하드코딩)
+    private final Map<String, BigDecimal> cardDiscountTable = Map.of(
+        "현대카드", new BigDecimal("0.10"),
+        "삼성카드", new BigDecimal("0.05")
+    );
 
     public KickboardRentalService() {
         this.kickboards = new ArrayList<>();
@@ -138,16 +146,89 @@ public class KickboardRentalService {
         return null;
     }
 
+    public List<Rental> getRentalHistoryForUser(User user) {
+        List<Rental> result = new ArrayList<>();
+        if (user == null) return result;
+
+        for (Rental r : this.rentals) {
+            if (r.getUser() != null &&
+                r.getUser().getUserId().equals(user.getUserId())) {
+                result.add(r);
+            }
+        }
+        return result;
+    }
+    
     public List<FeeStrategy> getFeeStrategies() {
         return new ArrayList<>(this.feeStrategies);
     }
 
-    public List<PromotionDecorator> getAvailablePromotions() {
+    //getAvailablePromitions 수정
+    public List<PromotionDecorator> getAvailablePromotions(Rental rental) {
         List<PromotionDecorator> discounts = new ArrayList<>();
-        discounts.add(new CardDiscountDecorator(null, "현대카드", new BigDecimal("0.10")));
-        discounts.add(new CardDiscountDecorator(null, "삼성카드", new BigDecimal("0.05")));
-        discounts.add(new CouponDiscountDecorator(null, "대학생 프로모션 쿠폰", "COLLEGE12345", new BigDecimal("0.05")));
+        User user = rental.getUser();
+
+        // 1) 카드 할인
+        if (user != null) {
+            for (Map.Entry<String, BigDecimal> entry : cardDiscountTable.entrySet()) {
+                discounts.add(new CardDiscountDecorator(
+                    null,
+                    entry.getKey(),
+                    entry.getValue()
+                ));
+            }
+        }
+
+        // 2) 사용자 보유 쿠폰 할인
+        if (user != null && user.getCoupons() != null) {
+            for (Map.Entry<String, BigDecimal> e : user.getCoupons().entrySet()) {
+                discounts.add(new CouponDiscountDecorator(
+                    null,
+                    "쿠폰(" + e.getKey() + ")",
+                    e.getKey(),
+                    e.getValue()
+                ));
+            }
+        }
+
+        // 3) 거리 조건 할인
+        double distance = rental.getRentalInfo().getTraveledDistance();
+        if (distance >= 1.5) {
+            discounts.add(new DistanceDiscountDecorator(null, 1.5, new BigDecimal("0.05")));
+        }
+        if (distance >= 2.0) {
+            discounts.add(new DistanceDiscountDecorator(null, 2.0, new BigDecimal("0.10")));
+        }
+
         return discounts;
+    }
+
+
+    // 쿠폰을 User에 추가하는 래퍼 메서드
+    public boolean addCouponForUser(String userId, String couponId, BigDecimal rate) {
+        boolean ok = userService.addCouponToUser(userId, couponId, rate);
+        if (ok) saveState();   
+        return ok;
+    }
+
+    // 사용된 쿠폰을 제거하는 메소드
+    public void removeUsedCoupons(Rental rental, List<PromotionDecorator> promotions, List<Integer> selectedIndexes) {
+        User user = rental.getUser();
+        if (user == null) return;
+
+        for (Integer idx : selectedIndexes) {
+            if (idx < 0 || idx >= promotions.size()) continue;
+
+            PromotionDecorator promo = promotions.get(idx);
+
+            if (promo instanceof CouponDiscountDecorator c) {
+                if (user.getCoupons().containsKey(c.getCouponId())) {
+                    user.getCoupons().remove(c.getCouponId());
+                    System.out.println("[안내] 쿠폰 '" + c.getCouponId() + "'은 사용되어 삭제되었습니다.");
+                }
+            }
+        }
+        saveState();
     }
 
     public Rental stopSimulatorAndUpdateRental(Rental rental) throws com.kickboard.exception.KickboardException {
