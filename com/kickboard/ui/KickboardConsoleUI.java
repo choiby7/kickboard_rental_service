@@ -2,6 +2,7 @@ package com.kickboard.ui;
 
 import com.kickboard.domain.rental.Rental;
 import com.kickboard.domain.user.PaymentMethod;
+import com.kickboard.domain.user.PaymentMethod; 
 import com.kickboard.domain.user.User;
 import com.kickboard.domain.vehicle.Vehicle;
 import com.kickboard.exception.KickboardException;
@@ -14,6 +15,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map; 
 import java.util.Scanner;
 
 public class KickboardConsoleUI {
@@ -33,7 +35,7 @@ public class KickboardConsoleUI {
             User currentUser = kickboardService.getCurrentUser();
             String prompt = (currentUser == null)
                 ? "\n명령어를 입력하세요 (login, register, status, exit):"
-                : String.format("\n[%s님] 명령어를 입력하세요 (logout, whoami, payment, status, rent, return, driving_status, exit):", currentUser.getUserId());
+                : String.format("\n[%s님] 명령어를 입력하세요 (logout, whoami, payment, status, rent, return, driving_status, history, coupon, exit):", currentUser.getUserId()); //(history, coupon 추가)
             System.out.println(prompt);
 
             String command = scanner.nextLine();
@@ -65,6 +67,12 @@ public class KickboardConsoleUI {
                     break;
                 case "payment":
                     managePayment();
+                    break;
+                case "history":
+                    showRentalHistory();
+                    break;
+                case "coupon":
+                    manageCoupons();
                     break;
                 case "exit":
                     kickboardService.shutdown();
@@ -280,7 +288,7 @@ public class KickboardConsoleUI {
         System.out.println(">> '" + chosenStrategy.name() + "' 요금제로 계산합니다.");
 
         // 2. 할인 선택
-        List<PromotionDecorator> promotions = kickboardService.getAvailablePromotions();
+        List<PromotionDecorator> promotions = kickboardService.getAvailablePromotions(rental); 
         List<Integer> selectedIndexes = new ArrayList<>();
         if (!promotions.isEmpty()) {
             System.out.println("\n적용할 할인을 선택해주세요. (공백으로 구분, 예: 1 2)");
@@ -343,10 +351,94 @@ public class KickboardConsoleUI {
         // 5. 결제 및 반납 완료
         boolean success = kickboardService.processPaymentAndFinalize(rental, finalFee, selectedMethod);
         if (success) {
+            rental.getRentalInfo().setFinalCost(finalFee.getFinalCost());//최종 결제 금액 저장 
+            kickboardService.removeUsedCoupons(rental, promotions, selectedIndexes); //사용된 쿠폰 삭제 
             System.out.printf("반납 완료! [대여 ID: %s, 사용자: %s, 킥보드: %s]\n",
                 rental.getRentalId(), rental.getUser().getUserId(), rental.getVehicle().getVehicleId());
         } else {
             System.out.println("결제에 실패했습니다. 다른 결제수단으로 다시 시도해주세요. 반납 처리가 취소됩니다.");
+        }
+    }
+
+    //사용자의 rental history를 보여주는 method
+    private void showRentalHistory() {
+        User currentUser = kickboardService.getCurrentUser();
+        if (currentUser == null) {
+            System.out.println("오류: 로그인이 필요합니다.");
+            return;
+        }
+
+        List<Rental> history = kickboardService.getRentalHistoryForUser(currentUser);
+        if (history.isEmpty()) {
+            System.out.println("이용 내역이 없습니다.");
+            return;
+        }
+
+        System.out.println("=== 이용 내역 ===");
+        for (Rental r : history) {
+            RentalInfo info = r.getRentalInfo();
+            System.out.printf(
+                "- 대여ID: %s | 킥보드: %s | 상태: %s\n  시작: %s | 종료: %s | 거리: %.2f km | 결제 금액: %s원\n",
+                r.getRentalId(),
+                r.getVehicle() != null ? r.getVehicle().getVehicleId() : "-",
+                r.getStatus(),
+                info != null ? info.getStartTime() : r.getStartTime(),
+                info != null ? info.getEndTime() : r.getEndTime(),
+                info != null ? info.getTraveledDistance() : 0.0,
+                (info != null && info.getFinalCost() != null)
+                        ? info.getFinalCost().setScale(0, RoundingMode.HALF_UP).toPlainString()
+                        : "-"
+                );
+        }
+    }
+
+    // 사용자가 쿠폰을 추가하는 메소드
+    private void manageCoupons() {
+        User currentUser = kickboardService.getCurrentUser();
+        if (currentUser == null) {
+            System.out.println("오류: 로그인이 필요합니다.");
+            return;
+        }
+
+        Map<String, BigDecimal> coupons = currentUser.getCoupons();
+
+        System.out.println("--- 보유 쿠폰 목록 ---");
+        if (coupons == null || coupons.isEmpty()) {
+            System.out.println("보유한 쿠폰이 없습니다.");
+        } else {
+            for (Map.Entry<String, BigDecimal> entry : coupons.entrySet()) {
+                String couponId = entry.getKey();
+                BigDecimal rate = entry.getValue();
+                String percent = rate.multiply(new BigDecimal("100"))
+                                .setScale(0, RoundingMode.HALF_UP)
+                                .toPlainString();
+
+                System.out.println("쿠폰ID: " + couponId + ", 할인율: " + percent + "%");
+            }
+        }
+        System.out.println("--------------------------");
+
+        System.out.print("새 쿠폰을 추가하시겠습니까? (y/n): ");
+        String input = scanner.nextLine();
+
+        if (input.equalsIgnoreCase("y")) {
+            System.out.print("쿠폰 ID를 입력하세요: ");
+            String couponId = scanner.nextLine();
+
+            System.out.print("할인율을 입력하세요 (예: 0.10): ");
+            BigDecimal rate = new BigDecimal(scanner.nextLine());
+
+            boolean added = kickboardService.addCouponForUser(
+                    currentUser.getUserId(),
+                    couponId,
+                    rate
+            );
+
+            if (added) {
+                System.out.println("쿠폰이 성공적으로 추가되었습니다.");
+            } else {
+                System.out.println("오류: 쿠폰 추가에 실패했습니다.");
+            }
         }
     }
 }
