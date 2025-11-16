@@ -16,6 +16,7 @@ public final class RentalInfo implements Serializable{
     private final LocalDateTime startTime;
     private final LocalDateTime endTime;       
     private final double traveledDistance;
+    private BigDecimal finalCost; 
 
     public RentalInfo(LocalDateTime startTime, LocalDateTime endTime, double traveledDistance) {
         this.startTime = Objects.requireNonNull(startTime, "startTime");
@@ -28,4 +29,8 @@ public final class RentalInfo implements Serializable{
     public LocalDateTime getStartTime() { return startTime; }
     public LocalDateTime getEndTime() { return endTime; }
     public double getTraveledDistance() { return traveledDistance; }
+    public BigDecimal getFinalCost() { return finalCost; } 
+
+    // setter 구현
+    public void setFinalCost(BigDecimal finalCost) { this.finalCost = finalCost; }
 }
