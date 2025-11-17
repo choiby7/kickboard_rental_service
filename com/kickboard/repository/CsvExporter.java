@@ -3,20 +3,20 @@ package com.kickboard.repository;
 import com.kickboard.domain.rental.Rental;
 import com.kickboard.domain.user.User;
 import com.kickboard.domain.vehicle.Vehicle;
-import com.kickboard.repository.AppState;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
-import java.util.function.Function;
+import java.util.Map;
 
 /**
  * CsvExporter.java      : AppState 데이터를 단일 CSV로 내보내는 유틸리티.
  *                         data/kickboard.csv 파일 하나만 생성한다.
- * @author				: Mingwan Kim
- * @email				: steven3407115@dankook.ac.kr
- * @version				: 1.0
- * @date				: 2025.10.07
+ * @author              : Mingwan Kim
+ * @email               : steven3407115@dankook.ac.kr
+ * @version             : 1.1
+ * @date                : 2025.11.17
  */
 public final class CsvExporter {
 
@@ -33,12 +33,33 @@ public final class CsvExporter {
 
             // --- Users ---
             sb.append("[Users]\n");
-            sb.append("userId,registeredAt,status\n");
+            // registeredAt/status 칼럼은 예비 칼럼 유지, couponCount 추가
+            sb.append("userId,registeredAt,status,couponCount\n");
             for (User u : state.getUsers()) {
-                // registeredAt/status 필드가 없다면 필요 시 빈 칸으로 남김
+                int couponCount = (u.getCoupons() == null) ? 0 : u.getCoupons().size();
                 sb.append(csv(u.getUserId())).append(',')
                   .append(csv("")).append(',')
-                  .append(csv("ACTIVE")).append('\n');
+                  .append(csv("ACTIVE")).append(',')
+                  .append(csv(Integer.toString(couponCount))).append('\n');
+            }
+            sb.append('\n');
+
+            // --- Coupons ---
+            // 각 사용자 보유 쿠폰을 userId,couponId,rate 로 펼쳐 쓴다.
+            sb.append("[Coupons]\n");
+            sb.append("userId,couponId,rate\n");
+            for (User u : state.getUsers()) {
+                Map<String, BigDecimal> coupons = u.getCoupons();
+                if (coupons == null || coupons.isEmpty()) continue;
+
+                // 정렬(선택): couponId 기준 오름차순
+                coupons.entrySet().stream()
+                        .sorted(Map.Entry.comparingByKey())
+                        .forEach(e -> {
+                            sb.append(csv(u.getUserId())).append(',')
+                              .append(csv(e.getKey())).append(',')
+                              .append(csv(toNum(e.getValue()))).append('\n');
+                        });
             }
             sb.append('\n');
 
@@ -48,7 +69,7 @@ public final class CsvExporter {
             for (Vehicle v : state.getVehicles()) {
                 sb.append(csv(v.getVehicleId())).append(',')
                   .append(csv(v.getModelName())).append(',')
-                  .append(csv(v.getStatus().name())).append(',')
+                  .append(csv(v.getStatus() == null ? "" : v.getStatus().name())).append(',')
                   .append(csv(v.getCurrentLocation())).append(',')
                   .append(csv(Integer.toString(v.getBatteryLevel()))).append('\n');
             }
@@ -59,11 +80,11 @@ public final class CsvExporter {
             sb.append("rentalId,userId,vehicleId,startTime,endTime,status\n");
             for (Rental r : state.getRentals()) {
                 sb.append(csv(r.getRentalId())).append(',')
-                  .append(csv(r.getUser() != null ? r.getUser().getUserId() : "")).append(',')
-                  .append(csv(r.getVehicle() != null ? r.getVehicle().getVehicleId() : "")).append(',')
-                  .append(csv(r.getStartTime() != null ? r.getStartTime().toString() : "")).append(',')
-                  .append(csv(r.getEndTime() != null ? r.getEndTime().toString() : "")).append(',')
-                  .append(csv(r.getStatus() != null ? r.getStatus().name() : "")).append('\n');
+                  .append(csv(r.getUser()    != null ? r.getUser().getUserId()          : "")).append(',')
+                  .append(csv(r.getVehicle() != null ? r.getVehicle().getVehicleId()    : "")).append(',')
+                  .append(csv(r.getStartTime()!= null ? r.getStartTime().toString()     : "")).append(',')
+                  .append(csv(r.getEndTime()  != null ? r.getEndTime().toString()       : "")).append(',')
+                  .append(csv(r.getStatus()   != null ? r.getStatus().name()            : "")).append('\n');
             }
             sb.append('\n');
 
@@ -90,6 +111,8 @@ public final class CsvExporter {
         }
     }
 
+    // ===== Helpers =====
+
     // CSV 안전 이스케이프: 콤마/따옴표/개행 포함 시 "..." 로 감싸고 내부 " → ""
     private static String csv(String s) {
         if (s == null) return "";
@@ -97,5 +120,9 @@ public final class CsvExporter {
         if (!needQuote) return s;
         String esc = s.replace("\"", "\"\"");
         return "\"" + esc + "\"";
+    }
+
+    private static String toNum(BigDecimal v) {
+        return (v == null) ? "" : v.toPlainString();
     }
 }
