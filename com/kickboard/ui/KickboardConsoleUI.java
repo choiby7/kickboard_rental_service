@@ -28,6 +28,34 @@ public class KickboardConsoleUI {
         this.kickboardService = KickboardRentalService.getInstance();
     }
 
+    private void handleUserMenu() {
+        while (true) {
+            System.out.println("\n[사용자 관리] 명령어를 입력하세요 (whoami, payment, history, coupon, back):");
+            String command = scanner.nextLine();
+
+            switch (command) {
+                case "whoami":
+                    showCurrentUser();
+                    break;
+                case "payment":
+                    managePayment();
+                    break;
+                case "history":
+                    showRentalHistory();
+                    break;
+                case "coupon":
+                    manageCoupons();
+                    break;
+                case "back":
+                    System.out.println("메인 메뉴로 돌아갑니다.");
+                    return; // Exit the loop and return to the main menu
+                default:
+                    System.out.println("알 수 없는 명령어입니다.");
+                    break;
+            }
+        }
+    }
+
     public void start() {
         System.out.println("== 킥보드 대여 서비스 ==");
 
@@ -35,7 +63,7 @@ public class KickboardConsoleUI {
             User currentUser = kickboardService.getCurrentUser();
             String prompt = (currentUser == null)
                 ? "\n명령어를 입력하세요 (login, register, status, exit):"
-                : String.format("\n[%s님] 명령어를 입력하세요 (logout, whoami, payment, status, rent, return, driving_status, history, coupon, exit):", currentUser.getUserId()); //(history, coupon 추가)
+                : String.format("\n[%s님] 명령어를 입력하세요 (logout, user, status, rent, return, driving_status, exit):", currentUser.getUserId());
             System.out.println(prompt);
 
             String command = scanner.nextLine();
@@ -47,8 +75,8 @@ public class KickboardConsoleUI {
                 case "logout":
                     logoutUser();
                     break;
-                case "whoami":
-                    showCurrentUser();
+                case "user":
+                    handleUserMenu(); // Call a new method to handle the user sub-menu
                     break;
                 case "register":
                     registerUser();
@@ -64,15 +92,6 @@ public class KickboardConsoleUI {
                     break;
                 case "driving_status":
                     showDrivingStatus();
-                    break;
-                case "payment":
-                    managePayment();
-                    break;
-                case "history":
-                    showRentalHistory();
-                    break;
-                case "coupon":
-                    manageCoupons();
                     break;
                 case "exit":
                     kickboardService.shutdown();

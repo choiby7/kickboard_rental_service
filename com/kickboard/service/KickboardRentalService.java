@@ -29,8 +29,9 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap; // 추가
 import java.util.List;
-import java.util.Map; 
+import java.util.Map; // 추가
 import java.util.Scanner;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -45,6 +46,7 @@ public class KickboardRentalService {
     private final List<StatusObserver> observers;
     private final List<FeeStrategy> feeStrategies;
     private final UserService userService;
+    private final Map<String, BigDecimal> cardDiscountTable; // 추가
 
     // 시뮬레이션 연동을 위한 변수 추가
     private static final Path SIMULATION_DIR = Paths.get("simulation");
@@ -57,11 +59,16 @@ public class KickboardRentalService {
         this.feeStrategies = new ArrayList<>();
         this.currentUser = null;
         this.userService = new UserService();
+        this.cardDiscountTable = new HashMap<>(); // 초기화
 
         System.out.println("KickboardRentalService가 생성되었습니다.");
 
         this.feeStrategies.add(new TimeFeeStrategy());
         this.feeStrategies.add(new DistanceFeeStrategy());
+        
+        // 카드 할인 정보 추가
+        this.cardDiscountTable.put("현대카드", new BigDecimal("0.10"));
+        this.cardDiscountTable.put("삼성카드", new BigDecimal("0.05"));
         
         com.kickboard.repository.AppState state = com.kickboard.repository.StateStore.loadOrCreate();
         // UserService에 사용자 데이터 로드 위임
