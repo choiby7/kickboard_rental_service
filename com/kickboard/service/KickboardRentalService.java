@@ -37,6 +37,8 @@ import java.util.concurrent.TimeUnit;
 
 public class KickboardRentalService {
 
+    private static KickboardRentalService instance;
+
     private User currentUser;
     private final List<Vehicle> kickboards;
     private final List<Rental> rentals;
@@ -48,13 +50,7 @@ public class KickboardRentalService {
     private static final Path SIMULATION_DIR = Paths.get("simulation");
     private static final Path DRIVING_STATUS_FILE = SIMULATION_DIR.resolve("driving_status.txt");
 
-    // 카드 할인율 Map 추가 (회사 정책, 강제 하드코딩)
-    private final Map<String, BigDecimal> cardDiscountTable = Map.of(
-        "현대카드", new BigDecimal("0.10"),
-        "삼성카드", new BigDecimal("0.05")
-    );
-
-    public KickboardRentalService() {
+    private KickboardRentalService() {
         this.kickboards = new ArrayList<>();
         this.rentals = new ArrayList<>();
         this.observers = new ArrayList<>();
@@ -89,6 +85,13 @@ public class KickboardRentalService {
             this.kickboards.add(kickboard3);
             System.out.println("[안내] 테스트용 킥보드 데이터 " + this.kickboards.size() + "개를 생성했습니다.");
         }
+    }
+
+    public static KickboardRentalService getInstance() {
+        if (instance == null) {
+            instance = new KickboardRentalService();
+        }
+        return instance;
     }
 
     // =================== Public API for UI Layer ===================

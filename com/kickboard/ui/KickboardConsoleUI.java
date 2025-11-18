@@ -25,7 +25,7 @@ public class KickboardConsoleUI {
 
     public KickboardConsoleUI() {
         this.scanner = new Scanner(System.in);
-        this.kickboardService = new KickboardRentalService();
+        this.kickboardService = KickboardRentalService.getInstance();
     }
 
     public void start() {
