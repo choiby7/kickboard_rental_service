@@ -82,7 +82,10 @@ public class KickboardSimulator {
                 // 2. 사용자 입력 확인 (논블로킹)
                 if (System.in.available() > 0) {
                     String input = simulatorScanner.nextLine().trim().toLowerCase();
-
+                    if (batteryLevel == 0) {
+                    	System.out.println("========== No Battery ==========");
+                    	continue;
+                    }
                     if (currentState == State.DRIVING) {
                         if (java.util.Arrays.asList("w", "a", "s", "d").contains(input)) {
                             moveKickboard(input);
