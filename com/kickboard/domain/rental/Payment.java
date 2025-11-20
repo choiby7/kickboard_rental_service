@@ -5,7 +5,6 @@ import com.kickboard.domain.payment.PaymentMethod;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Objects;
-import java.util.Random; // 결제 실패 구현 위한 random.
 
 public class Payment {
 
@@ -34,16 +33,14 @@ public class Payment {
         if (amount == null) throw new IllegalStateException("amount not set"); // amount가 null일 경우
         if (paymentMethod.getIdentifier() == null || paymentMethod.getPassword() == null) throw new IllegalStateException("card info wrong"); // 카드번호 값이 존재하지 않을 경우.
         
-        // 임시: 50% 확률로 결제 실패 (잔액 부족)
-        Random rand = new Random();
-        boolean hasEnoughBalance = rand.nextBoolean(); // true or false (50% 확률)
 
-        if (!hasEnoughBalance) { // 결제 실패 
+        if (paymentMethod.getBalance().compareTo(amount) < 0){ // 결제 실패 
             this.status = PaymentStatus.FAILED;
             this.transactionDate = LocalDateTime.now();
             return false;
         }
         // 결제 성공
+        paymentMethod.deductBalance(amount);
         this.transactionDate = LocalDateTime.now();
         this.status = PaymentStatus.SUCCESS;
         return this.status == PaymentStatus.SUCCESS;
