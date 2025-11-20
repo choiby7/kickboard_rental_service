@@ -1,6 +1,6 @@
 package com.kickboard.domain.rental;
 
-import com.kickboard.domain.user.PaymentMethod;
+import com.kickboard.domain.payment.PaymentMethod;
 import com.kickboard.domain.user.User;
 import com.kickboard.domain.vehicle.Vehicle;
 import com.kickboard.domain.pricing.BaseFee;
@@ -67,11 +67,11 @@ public class Rental implements Serializable{
         this.status = RentalStatus.ACTIVE;
         this.endTime = null;
     }
-    public boolean processPayment(PaymentMethod method, BigDecimal cost) { // 결제 진행
-        Payment payment = new Payment("PAY-" + rentalId, rentalId, method);
-        payment.setAmount(cost);
-        return payment.processPaymentCheck(); // 결제 성공 시 true 반환
-    }
+//    public boolean processPayment(PaymentMethod method, BigDecimal cost) { // 결제 진행
+//        Payment payment = new Payment("PAY-" + rentalId, rentalId, method);
+//        payment.setAmount(cost);
+//        return payment.processPaymentCheck(); // 결제 성공 시 true 반환
+//    }
     
     public Fee calculateFinalFee(FeeStrategy strategy, List<PromotionDecorator> discounts, List<Integer> selectedIndexes) { // 최종 요금 계산
 

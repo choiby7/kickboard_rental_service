@@ -1,5 +1,7 @@
 package com.kickboard.domain.user;
 
+import com.kickboard.domain.payment.PaymentMethod;
+
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.HashMap;

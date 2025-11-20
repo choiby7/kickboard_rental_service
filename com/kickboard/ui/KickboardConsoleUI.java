@@ -1,8 +1,9 @@
 package com.kickboard.ui;
 
+import com.kickboard.domain.payment.PaymentMethodType;
 import com.kickboard.domain.rental.Rental;
 import com.kickboard.domain.rental.RentalInfo;
-import com.kickboard.domain.user.PaymentMethod; 
+import com.kickboard.domain.payment.PaymentMethod;
 import com.kickboard.domain.user.User;
 import com.kickboard.domain.vehicle.Vehicle;
 import com.kickboard.exception.KickboardException;
@@ -234,7 +235,7 @@ public class KickboardConsoleUI {
             System.out.println("등록된 결제수단이 없습니다.");
         } else {
             for (PaymentMethod method : paymentMethods) {
-                System.out.println("별명: " + method.getAlias() + ", 카드번호: " + method.getCardNumber());
+                System.out.println("별명: " + method.getAlias() + ", 카드번호: " + method.getIdentifier());
             }
         }
         System.out.println("--------------------------");
@@ -242,14 +243,31 @@ public class KickboardConsoleUI {
         System.out.print("새 결제수단을 추가하시겠습니까? (y/n): ");
         String input = scanner.nextLine();
         if (input.equalsIgnoreCase("y")) {
-            System.out.print("카드 번호: ");
+            System.out.println("결제수단의 타입의 번호를 입력하세요.\n(1) : credit card\n(2) : kakao pay");
+            String typeStr = scanner.nextLine();
+            String identifier; String password; // prompt용 변수
+            PaymentMethodType methodType;
+            if (typeStr.equals("1")) {
+                methodType = PaymentMethodType.CREDIT_CARD;
+                identifier = "카드 번호: ";
+                password = "CVC: ";
+            } else if (typeStr.equals("2")) {
+                methodType = PaymentMethodType.KAKAO_PAY;
+                identifier = "전화번호: ";
+                password = "간편 비밀번호: ";
+            } else {
+                System.out.println("오류: 지원하지 않는 결제수단 타입입니다.");
+                return;
+            }
+            System.out.print(identifier);
             String cardNumber = scanner.nextLine();
-            System.out.print("CVC: ");
+            System.out.print(password);
             String cvc = scanner.nextLine();
             System.out.print("결제 수단 별칭을 입력하세요 (예: '내 주카드'): ");
             String alias = scanner.nextLine();
+
             
-            boolean added = kickboardService.getUserService().addPaymentMethod(currentUser.getUserId(), cardNumber, cvc, alias);
+            boolean added = kickboardService.getUserService().addPaymentMethod(methodType, currentUser.getUserId(), cardNumber, cvc, alias);
             if (added) {
                 System.out.println("결제수단이 성공적으로 추가되었습니다.");
             } else {

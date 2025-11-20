@@ -1,8 +1,12 @@
 package com.kickboard.service;
 
+import com.kickboard.domain.factory.CreditCardFactory;
+import com.kickboard.domain.factory.KakaoPayFactory;
+import com.kickboard.domain.factory.PaymentFactory;
+import com.kickboard.domain.rental.Payment;
 import com.kickboard.domain.rental.Rental;
 import com.kickboard.domain.rental.RentalStatus;
-import com.kickboard.domain.user.PaymentMethod;
+import com.kickboard.domain.payment.PaymentMethod;
 import com.kickboard.domain.user.User;
 import com.kickboard.domain.vehicle.Vehicle;
 import com.kickboard.domain.vehicle.VehicleStatus;
@@ -22,7 +26,6 @@ import com.kickboard.repository.StateStore;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -32,7 +35,6 @@ import java.util.ArrayList;
 import java.util.HashMap; // 추가
 import java.util.List;
 import java.util.Map; // 추가
-import java.util.Scanner;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -47,6 +49,7 @@ public class KickboardRentalService {
     private final List<FeeStrategy> feeStrategies;
     private final UserService userService;
     private final Map<String, BigDecimal> cardDiscountTable; // 추가
+    private PaymentFactory paymentFactory; // 추가 1120
 
     // 시뮬레이션 연동을 위한 변수 추가
     private static final Path SIMULATION_DIR = Paths.get("simulation");
@@ -63,6 +66,7 @@ public class KickboardRentalService {
 
         System.out.println("KickboardRentalService가 생성되었습니다.");
 
+        // Factory로 전환 예정.
         this.feeStrategies.add(new TimeFeeStrategy());
         this.feeStrategies.add(new DistanceFeeStrategy());
         
@@ -201,7 +205,7 @@ public class KickboardRentalService {
             }
         }
 
-        // 3) 거리 조건 할인
+        // 3) 거리 조건 할인 -- distance 기반으로만 할인.
         double distance = rental.getRentalInfo().getTraveledDistance();
         if (distance >= 1.5) {
             discounts.add(new DistanceDiscountDecorator(null, 1.5, new BigDecimal("0.05")));
@@ -287,7 +291,7 @@ public class KickboardRentalService {
     public boolean processPaymentAndFinalize(Rental rental, Fee finalFee, PaymentMethod paymentMethod) {
         BigDecimal cost = finalFee.getFinalCost();
         
-        boolean paymentSuccess = rental.processPayment(paymentMethod, cost);
+        boolean paymentSuccess = processPayment(rental, paymentMethod, cost);
 
         if (paymentSuccess) {
             rental.getVehicle().lock();
@@ -299,6 +303,26 @@ public class KickboardRentalService {
             rental.revertComplete();
             return false;
         }
+    }
+
+    public boolean processPayment(Rental rental, PaymentMethod method, BigDecimal cost) { // 결제 진행
+        String rentalId = rental.getRentalId();
+
+        switch (method.getType()) {
+            case CREDIT_CARD:
+                paymentFactory = new CreditCardFactory();
+                break;
+            case KAKAO_PAY:
+                paymentFactory = new KakaoPayFactory();
+                break;
+            default:
+                paymentFactory = new CreditCardFactory(); // 기본값
+        }
+
+
+        Payment payment = paymentFactory.createPayment(method, cost, rentalId);
+        payment.setAmount(cost);
+        return payment.processPaymentCheck(); // 결제 성공 시 true 반환
     }
 
     private void writeShutdownCommand() {
