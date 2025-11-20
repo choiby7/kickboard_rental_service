@@ -23,6 +23,13 @@ public class KickboardConsoleUI {
 
     private final Scanner scanner;
     private final KickboardRentalService kickboardService;
+    private static final Map<String, String> CARD_BIN_MAP = Map.of( // 카드번호 4자리 - 카드회사
+        "9400", "Samsung",
+        "9430", "Hyundai",
+        "9460", "KB",
+        "9480", "Shinhan",
+        "9580", "NH"
+    );
 
     public KickboardConsoleUI() {
         this.scanner = new Scanner(System.in);
@@ -235,7 +242,7 @@ public class KickboardConsoleUI {
             System.out.println("등록된 결제수단이 없습니다.");
         } else {
             for (PaymentMethod method : paymentMethods) {
-                System.out.println("별명: " + method.getAlias() + ", 카드번호: " + method.getIdentifier());
+                System.out.println("별명: " + method.getAlias() + ", 카드번호: " + method.getIdentifier() + ", 잔액: " + method.getBalance());
             }
         }
         System.out.println("--------------------------");
@@ -259,8 +266,30 @@ public class KickboardConsoleUI {
                 System.out.println("오류: 지원하지 않는 결제수단 타입입니다.");
                 return;
             }
-            System.out.print(identifier);
-            String cardNumber = scanner.nextLine();
+            
+            String cardNumber;
+            // CREDIT_CARD일 때만 BIN 반복 체크 
+            if (methodType == PaymentMethodType.CREDIT_CARD) {
+                while (true) {
+                    System.out.print(identifier); // "카드 번호: "
+                    cardNumber = scanner.nextLine();
+
+                    if (cardNumberCheck(cardNumber)) {
+                        String company = CARD_BIN_MAP.get(cardNumber.substring(0, 4));
+                        System.out.println("확인됨: " + company + " 카드입니다.");
+                        break; // 유효하면 루프 탈출
+                    } else {
+                        // 추가 정보 제공
+                        System.out.println("\n가능한 카드사 목록은 다음과 같습니다:");
+                        printValidBins();
+                    }
+                }
+            } else {
+                // KAKAO_PAY는 기존 방식 유지
+                System.out.print(identifier);
+                cardNumber = scanner.nextLine();
+            }
+            
             System.out.print(password);
             String cvc = scanner.nextLine();
             System.out.print("결제 수단 별칭을 입력하세요 (예: '내 주카드'): ");
@@ -360,7 +389,7 @@ public class KickboardConsoleUI {
         }
         System.out.println("\n사용 가능한 결제수단:");
         for (int i = 0; i < methods.size(); i++) {
-            System.out.printf("%d. %s\n", i + 1, methods.get(i).getAlias());
+            System.out.printf("%d. %s | 잔액: %s\n", i + 1, methods.get(i).getAlias(), methods.get(i).getBalance());  
         }
 
         PaymentMethod selectedMethod = null;
@@ -393,7 +422,7 @@ public class KickboardConsoleUI {
             System.out.printf("반납 완료! [대여 ID: %s, 사용자: %s, 킥보드: %s]\n",
                 rental.getRentalId(), rental.getUser().getUserId(), rental.getVehicle().getVehicleId());
         } else {
-            System.out.println("결제에 실패했습니다. 다른 결제수단으로 다시 시도해주세요. 반납 처리가 취소됩니다.");
+            System.out.println("잔액 부족으로 결제에 실패했습니다. 다른 결제수단으로 다시 시도해주세요. 반납 처리가 취소됩니다.");
         }
     }
 
@@ -477,5 +506,38 @@ public class KickboardConsoleUI {
                 System.out.println("오류: 쿠폰 추가에 실패했습니다.");
             }
         }
+    }
+
+    //사용자의 카드번호를 확인하는 메소드.
+    public boolean cardNumberCheck(String cardNumber) {
+
+        // 1. 숫자만 입력되었는지 체크
+        if (!cardNumber.matches("\\d+")) {
+            System.out.println("오류: 카드번호는 숫자만 입력해야 합니다.");
+            return false;
+        }
+
+        // 2. 정확히 16자리인지 체크
+        if (cardNumber.length() != 16) {
+            System.out.println("오류: 카드번호는 총 16자리여야 합니다.");
+            return false;
+        }
+
+        // 3. 앞 4자리 BIN 검사
+        String bin4 = cardNumber.substring(0, 4);
+        if (!CARD_BIN_MAP.containsKey(bin4)) {
+            System.out.println("오류: 지원하지 않는 카드사입니다.");
+            return false;
+        }
+
+        return true;
+    }
+    //사용 가능한 카드 목록
+    public void printValidBins() {
+        System.out.println("\n--- 사용 가능한 카드 BIN 목록 ---");
+        for (var entry : CARD_BIN_MAP.entrySet()) {
+            System.out.println(entry.getValue() + " 카드  →  앞자리: " + entry.getKey());
+        }
+        System.out.println("-----------------------------------\n");
     }
 }
