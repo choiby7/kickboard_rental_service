@@ -1,6 +1,8 @@
 package com.kickboard.domain.payment;
 
 import java.io.Serializable;
+import java.math.BigDecimal; 
+import java.util.Random; 
 
 /**
  * class PaymentMethod.java
@@ -17,12 +19,19 @@ public abstract class PaymentMethod implements Serializable{ // implements Seria
     private String alias; // 결제수단 별칭 추가
     // 결제수단 타입 추가 (0-신용카드, 1-카카오페이)
     private PaymentMethodType type;
+    private BigDecimal balance; // 결제수단 잔액
 
     protected PaymentMethod(String id, String password, String alias, PaymentMethodType type) {
         this.identifier = id;
         this.password = password;
         this.alias = alias;
         this.type = type;
+        this.balance = BigDecimal.valueOf(new Random().nextInt(16) + 5)
+                            .multiply(BigDecimal.valueOf(1000)); // 5000~20000 사이 임의의 잔액 설정
+    }
+
+    public void deductBalance(BigDecimal amount) {
+        this.balance = this.balance.subtract(amount);
     }
 
     public String getAlias() {
@@ -43,5 +52,9 @@ public abstract class PaymentMethod implements Serializable{ // implements Seria
 
     public PaymentMethodType getType() {
         return type;
+    }
+
+    public BigDecimal getBalance() {
+        return this.balance;
     }
 }
