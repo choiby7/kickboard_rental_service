@@ -1,5 +1,6 @@
 package com.kickboard.test;
 
+import com.kickboard.domain.payment.PaymentMethodType;
 import com.kickboard.service.UserService;
 
 // UserServiceTest.java : UserService 단위 테스트
@@ -65,8 +66,8 @@ public class UserServiceTest {
         } else {
             System.out.println("로그인 실패");
         }
-        userService.addPaymentMethod(userService.getCurrentUser().getUserId(), "1234-5678-9012-3456", "12/25", "hyundai");
-        userService.addPaymentMethod(userService.getCurrentUser().getUserId(), "4321-5678-9012-3456", "11/25", "samsung");
+        userService.addPaymentMethod(PaymentMethodType.CREDIT_CARD, userService.getCurrentUser().getUserId(), "1234-5678-9012-3456", "123", "hyundai");
+        userService.addPaymentMethod(PaymentMethodType.CREDIT_CARD, userService.getCurrentUser().getUserId(), "4321-5678-9012-3456", "456", "samsung");
         System.out.println("결제수단 추가 성공");
         System.out.println(userService.getCurrentUser().getPaymentMethods());
         System.out.println(userService.getAllUsers()); 

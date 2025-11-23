@@ -14,15 +14,20 @@ import com.kickboard.service.KickboardRentalService;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Map; 
+import java.util.Map;
 import java.util.Scanner;
+
+import com.kickboard.ui.command.*;
 
 public class KickboardConsoleUI {
 
     private final Scanner scanner;
     private final KickboardRentalService kickboardService;
+    private final Map<String, Command> commands; // 추가
     private static final Map<String, String> CARD_BIN_MAP = Map.of( // 카드번호 4자리 - 카드회사
         "9400", "Samsung",
         "9430", "Hyundai",
@@ -34,32 +39,44 @@ public class KickboardConsoleUI {
     public KickboardConsoleUI() {
         this.scanner = new Scanner(System.in);
         this.kickboardService = KickboardRentalService.getInstance();
+        this.commands = new HashMap<>(); // 초기화
+        
+        // 메인 메뉴 명령어 등록
+        commands.put("login", new LoginCommand(this));
+        commands.put("register", new RegisterCommand(this));
+        commands.put("status", new StatusCommand(this));
+        commands.put("exit", new ExitCommand(this));
+
+        // 로그인 후 명령어 등록
+        commands.put("logout", new LogoutCommand(this));
+        commands.put("user", new UserMenuCommand(this));
+        commands.put("rent", new RentCommand(this));
+        commands.put("return", new ReturnCommand(this));
+        commands.put("driving_status", new DrivingStatusCommand(this));
+
+        // 사용자 관리 메뉴 명령어 등록 (handleUserMenu 내부에서 사용될 명령어들)
+        commands.put("whoami", new WhoamiCommand(this));
+        commands.put("payment", new PaymentCommand(this));
+        commands.put("history", new HistoryCommand(this));
+        commands.put("coupon", new CouponCommand(this));
+        commands.put("back", new BackCommand()); // BackCommand는 특별한 로직 없음
     }
 
-    private void handleUserMenu() {
+    public void handleUserMenu() {
         while (true) {
             System.out.println("\n[사용자 관리] 명령어를 입력하세요 (whoami, payment, history, coupon, back):");
-            String command = scanner.nextLine();
+            String commandKey = scanner.nextLine();
 
-            switch (command) {
-                case "whoami":
-                    showCurrentUser();
-                    break;
-                case "payment":
-                    managePayment();
-                    break;
-                case "history":
-                    showRentalHistory();
-                    break;
-                case "coupon":
-                    manageCoupons();
-                    break;
-                case "back":
-                    System.out.println("메인 메뉴로 돌아갑니다.");
-                    return; // Exit the loop and return to the main menu
-                default:
-                    System.out.println("알 수 없는 명령어입니다.");
-                    break;
+            if (commandKey.equals("back")) {
+                System.out.println("메인 메뉴로 돌아갑니다.");
+                return; // Exit the loop and return to the main menu
+            }
+            
+            Command command = commands.get(commandKey);
+            if (command != null) {
+                command.execute();
+            } else {
+                System.out.println("알 수 없는 명령어입니다.");
             }
         }
     }
@@ -74,46 +91,18 @@ public class KickboardConsoleUI {
                 : String.format("\n[%s님] 명령어를 입력하세요 (logout, user, status, rent, return, driving_status, exit):", currentUser.getUserId());
             System.out.println(prompt);
 
-            String command = scanner.nextLine();
+            String commandKey = scanner.nextLine();
 
-            switch (command) {
-                case "login":
-                    loginUser();
-                    break;
-                case "logout":
-                    logoutUser();
-                    break;
-                case "user":
-                    handleUserMenu(); // Call a new method to handle the user sub-menu
-                    break;
-                case "register":
-                    registerUser();
-                    break;
-                case "status":
-                    displayKickboardStatus();
-                    break;
-                case "rent":
-                    rentKickboard();
-                    break;
-                case "return":
-                    returnKickboard();
-                    break;
-                case "driving_status":
-                    showDrivingStatus();
-                    break;
-                case "exit":
-                    kickboardService.shutdown();
-                    System.out.println("서비스를 종료합니다. 이용해주셔서 감사합니다.");
-                    scanner.close();
-                    return;
-                default:
-                    System.out.println("알 수 없는 명령어입니다.");
-                    break;
+            Command command = commands.get(commandKey);
+            if (command != null) {
+                command.execute();
+            } else {
+                System.out.println("알 수 없는 명령어입니다.");
             }
         }
     }
 
-    private void loginUser() {
+    public void loginUser() {
         if (kickboardService.getCurrentUser() != null) {
             System.out.println("오류: 이미 로그인되어 있습니다.");
             return;
@@ -132,7 +121,7 @@ public class KickboardConsoleUI {
         }
     }
 
-    private void logoutUser() {
+    public void logoutUser() {
         User currentUser = kickboardService.getCurrentUser();
         if (currentUser == null) {
             System.out.println("오류: 로그인 상태가 아닙니다.");
@@ -142,7 +131,7 @@ public class KickboardConsoleUI {
         System.out.println(currentUser.getUserId() + "님이 로그아웃하셨습니다.");
     }
 
-    private void showCurrentUser() {
+    public void showCurrentUser() {
         User currentUser = kickboardService.getCurrentUser();
         if (currentUser != null) {
             System.out.println("현재 로그인된 사용자: " + currentUser.getUserId());
@@ -151,7 +140,7 @@ public class KickboardConsoleUI {
         }
     }
 
-    private void registerUser() {
+    public void registerUser() {
         System.out.println("-> 사용자 등록을 시작합니다.");
         System.out.print("사용할 ID: ");
         String userId = scanner.nextLine();
@@ -166,7 +155,7 @@ public class KickboardConsoleUI {
         }
     }
 
-    private void displayKickboardStatus() {
+    public void displayKickboardStatus() {
         System.out.println("--- 현재 킥보드 목록 ---");
         List<Vehicle> kickboards = kickboardService.getKickboards();
         if (kickboards.isEmpty()) {
@@ -181,7 +170,7 @@ public class KickboardConsoleUI {
         System.out.println("----------------------");
     }
 
-    private void rentKickboard() {
+    public void rentKickboard() {
         User currentUser = kickboardService.getCurrentUser();
         if (currentUser == null) {
             System.out.println("오류: 로그인이 필요합니다.");
@@ -201,7 +190,7 @@ public class KickboardConsoleUI {
         }
     }
 
-    private void showDrivingStatus() {
+    public void showDrivingStatus() {
         User currentUser = kickboardService.getCurrentUser();
         if (currentUser == null) {
             System.out.println("오류: 로그인이 필요합니다.");
@@ -229,7 +218,7 @@ public class KickboardConsoleUI {
         }
     }
 
-    private void managePayment() {
+    public void managePayment() {
         User currentUser = kickboardService.getCurrentUser();
         if (currentUser == null) {
             System.out.println("오류: 로그인이 필요합니다.");
@@ -305,7 +294,7 @@ public class KickboardConsoleUI {
         }
     }
 
-    private void returnKickboard() {
+    public void returnKickboard() {
         User currentUser = kickboardService.getCurrentUser();
         if (currentUser == null) {
             System.out.println("오류: 로그인이 필요합니다.");
@@ -427,7 +416,7 @@ public class KickboardConsoleUI {
     }
 
     //사용자의 rental history를 보여주는 method
-    private void showRentalHistory() {
+    public void showRentalHistory() {
         User currentUser = kickboardService.getCurrentUser();
         if (currentUser == null) {
             System.out.println("오류: 로그인이 필요합니다.");
@@ -459,7 +448,7 @@ public class KickboardConsoleUI {
     }
 
     // 사용자가 쿠폰을 추가하는 메소드
-    private void manageCoupons() {
+    public void manageCoupons() {
         User currentUser = kickboardService.getCurrentUser();
         if (currentUser == null) {
             System.out.println("오류: 로그인이 필요합니다.");
@@ -539,5 +528,11 @@ public class KickboardConsoleUI {
             System.out.println(entry.getValue() + " 카드  →  앞자리: " + entry.getKey());
         }
         System.out.println("-----------------------------------\n");
+    }
+
+    public void exitApplication() {
+        kickboardService.shutdown();
+        System.out.println("서비스를 종료합니다. 이용해주셔서 감사합니다.");
+        scanner.close();
     }
 }
