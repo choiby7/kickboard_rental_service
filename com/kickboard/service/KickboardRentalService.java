@@ -411,18 +411,20 @@ public class KickboardRentalService {
             String os = System.getProperty("os.name").toLowerCase();
             if (os.contains("win")) {
                 new ProcessBuilder("cmd", "/c", "start", "cmd", "/k", command).start();
-            } else if (os.contains("mac")) {
+            } else if (os.contains("mac")) { // 맥 인경우 실행
                 String projectDir = Paths.get("").toAbsolutePath().toString();
                 String scriptCmd = "cd '" + projectDir.replace("'", "'\\''") + "'; " + command;
-                new ProcessBuilder("osascript", "-e", "tell application \"Terminal\" to do script \"" + scriptCmd.replace("\"", "\\\"") + "\"").start();
-            } else {
+                new ProcessBuilder("osascript",
+                        "-e", "tell application \"Terminal\" to activate", // 터미널 포커스
+                        "-e", "tell application \"Terminal\" to do script \"" + scriptCmd.replace("\"", "\\\"") + "\"").start();
+            } else { // linux 등 기타 OS
                  try {
                     new ProcessBuilder("x-terminal-emulator", "-e", "bash", "-lc", command + "; exec bash").start();
                 } catch (IOException ignored) {
                     new ProcessBuilder("bash", "-lc", command + " &").start();
                 }
             }
-        } catch (IOException | NumberFormatException e) {
+        } catch (IOException | NumberFormatException e) { // 이외의 OS의 경우 혹은 오류 발생 시
             throw new com.kickboard.exception.KickboardException("오류: 시뮬레이터를 시작하지 못했습니다: " + e.getMessage());
         }
 
