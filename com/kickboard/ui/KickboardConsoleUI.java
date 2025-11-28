@@ -534,5 +534,6 @@ public class KickboardConsoleUI {
         kickboardService.shutdown();
         System.out.println("서비스를 종료합니다. 이용해주셔서 감사합니다.");
         scanner.close();
+        System.exit(0);
     }
 }
