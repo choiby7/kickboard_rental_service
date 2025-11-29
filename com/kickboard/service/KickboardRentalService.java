@@ -448,4 +448,26 @@ public class KickboardRentalService {
         state.setCurrentUserId(user == null ? null : user.getUserId());
         com.kickboard.repository.StateStore.save(state);
     }
+
+    // 사용 가능한 할인 목록을 제공하는 메소드
+    public List<Integer> buildDisplayList(
+            List<PromotionDecorator> promotions, 
+            List<PaymentMethod> paymentMethods
+    ) {
+        List<Integer> display = new ArrayList<>();
+
+        for (int i = 0; i < promotions.size(); i++) {
+            PromotionDecorator promo = promotions.get(i);
+            String name = promo.getDisplayName();
+
+            if (promo instanceof CardDiscountDecorator) {
+                String company = name.split(" ")[0];
+                boolean ok = paymentMethods.stream()
+                        .anyMatch(m -> m.getCompanyName().equalsIgnoreCase(company));
+                if (!ok) continue;
+            }
+        display.add(i);
+        }
+    return display;
+    }
 }
