@@ -5,8 +5,8 @@ package com.kickboard.domain.payment;
 // 카카오페이 결제 수단 정보 클래스 - Concrete PaymentMethod
 public class KakaoPayMethod extends PaymentMethod {
     // 카카오페이 결제 수단 정보 (이름과 간편비밀번호)
-    public KakaoPayMethod(String cardNumber, String cvc, String alias) {
-        super(cardNumber, cvc, alias, PaymentMethodType.KAKAO_PAY);
+    public KakaoPayMethod(String cardNumber, String cvc, String alias, String companyName) {
+        super(cardNumber, cvc, alias, PaymentMethodType.KAKAO_PAY, companyName); 
     }
 }
 
