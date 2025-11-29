@@ -70,9 +70,9 @@ public class KickboardRentalService {
         this.feeStrategies.add(new TimeFeeStrategy());
         this.feeStrategies.add(new DistanceFeeStrategy());
         
-        // 카드 할인 정보 추가
-        this.cardDiscountTable.put("현대카드", new BigDecimal("0.10"));
-        this.cardDiscountTable.put("삼성카드", new BigDecimal("0.05"));
+        // 카드 할인 정보 추가(key는 CARD_BIN_MAP의 key와 동일)
+        this.cardDiscountTable.put("Hyundai", new BigDecimal("0.10"));
+        this.cardDiscountTable.put("Samsung", new BigDecimal("0.05"));
         
         com.kickboard.repository.AppState state = com.kickboard.repository.StateStore.loadOrCreate();
         // UserService에 사용자 데이터 로드 위임
