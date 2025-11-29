@@ -9,8 +9,8 @@ import java.math.BigDecimal;
 public class KakaoPayFactory implements PaymentFactory {
 
     @Override
-    public PaymentMethod createPaymentMethod(String identifier, String password, String alias) {
-        return new KakaoPayMethod(identifier, password, alias);
+    public PaymentMethod createPaymentMethod(String identifier, String password, String alias, String companyName) { 
+        return new KakaoPayMethod(identifier, password, alias, companyName); 
     }
 
     @Override
