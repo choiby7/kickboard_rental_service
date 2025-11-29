@@ -4,7 +4,7 @@ package com.kickboard.domain.payment;
 
 // 신용카드 결제 수단 정보 클래스 - Concrete PaymentMethod
 public class CreditCardMethod extends PaymentMethod {
-    public CreditCardMethod(String cardNumber, String cvc, String alias) {
-        super(cardNumber, cvc, alias, PaymentMethodType.CREDIT_CARD);
+    public CreditCardMethod(String cardNumber, String cvc, String alias, String companyName) { 
+        super(cardNumber, cvc, alias, PaymentMethodType.CREDIT_CARD, companyName); 
     }
 }
