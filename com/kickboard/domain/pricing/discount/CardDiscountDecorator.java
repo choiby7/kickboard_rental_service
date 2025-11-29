@@ -47,7 +47,7 @@ public class CardDiscountDecorator extends PromotionDecorator {
 
     @Override // getCardCompany -> 상위(fee)에서 정의된 getDisplayName으로 대체
     public String getDisplayName() {
-        return "카드 할인 (" + cardCompany + ")";
+        return cardCompany + " 카드 할인";
     }
 
     public BigDecimal getDiscountRate() {
