@@ -8,6 +8,7 @@ import com.kickboard.domain.user.User;
 import com.kickboard.domain.vehicle.Vehicle;
 import com.kickboard.exception.KickboardException;
 import com.kickboard.domain.pricing.Fee;
+import com.kickboard.domain.pricing.discount.CardDiscountDecorator;
 import com.kickboard.domain.pricing.discount.PromotionDecorator;
 import com.kickboard.domain.pricing.strategy.FeeStrategy;
 import com.kickboard.service.KickboardRentalService;
