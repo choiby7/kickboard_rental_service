@@ -10,8 +10,8 @@ import java.math.BigDecimal;
 public class CreditCardFactory implements PaymentFactory {
 
     @Override
-    public PaymentMethod createPaymentMethod(String cardNumber, String cvc, String alias) {
-        return new CreditCardMethod(cardNumber, cvc, alias);
+    public PaymentMethod createPaymentMethod(String cardNumber, String cvc, String alias, String companyName) { 
+        return new CreditCardMethod(cardNumber, cvc, alias, companyName); 
     }
 
 
