@@ -20,14 +20,16 @@ public abstract class PaymentMethod implements Serializable{ // implements Seria
     // 결제수단 타입 추가 (0-신용카드, 1-카카오페이)
     private PaymentMethodType type;
     private BigDecimal balance; // 결제수단 잔액
+    private String companyName; // 결제수단 회사
 
-    protected PaymentMethod(String id, String password, String alias, PaymentMethodType type) {
+    protected PaymentMethod(String id, String password, String alias, PaymentMethodType type, String companyName) { 
         this.identifier = id;
         this.password = password;
         this.alias = alias;
         this.type = type;
         this.balance = BigDecimal.valueOf(new Random().nextInt(16) + 5)
                             .multiply(BigDecimal.valueOf(1000)); // 5000~20000 사이 임의의 잔액 설정
+        this.companyName = companyName; 
     }
 
     public void deductBalance(BigDecimal amount) {
@@ -56,5 +58,9 @@ public abstract class PaymentMethod implements Serializable{ // implements Seria
 
     public BigDecimal getBalance() {
         return this.balance;
+    }
+
+    public String getCompanyName() {
+        return companyName;
     }
 }
