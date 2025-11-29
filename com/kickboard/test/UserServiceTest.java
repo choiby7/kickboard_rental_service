@@ -66,8 +66,8 @@ public class UserServiceTest {
         } else {
             System.out.println("로그인 실패");
         }
-        userService.addPaymentMethod(PaymentMethodType.CREDIT_CARD, userService.getCurrentUser().getUserId(), "1234-5678-9012-3456", "123", "hyundai");
-        userService.addPaymentMethod(PaymentMethodType.CREDIT_CARD, userService.getCurrentUser().getUserId(), "4321-5678-9012-3456", "456", "samsung");
+        userService.addPaymentMethod(PaymentMethodType.CREDIT_CARD, userService.getCurrentUser().getUserId(), "9430567890123456", "123", "myhyundai", "Hyundai"); 
+        userService.addPaymentMethod(PaymentMethodType.CREDIT_CARD, userService.getCurrentUser().getUserId(), "9400567890123456", "456", "mysamsung", "Samsung"); 
         System.out.println("결제수단 추가 성공");
         System.out.println(userService.getCurrentUser().getPaymentMethods());
         System.out.println(userService.getAllUsers()); 
