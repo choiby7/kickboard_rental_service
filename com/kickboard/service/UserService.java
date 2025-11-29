@@ -164,9 +164,10 @@ public class UserService {
      * @param userId 대상 사용자 ID
      * @param identifier 카드번호
      * @param password CVC
+     * @param companyName 카드회사 
      * @return true: 추가 성공, false: 사용자 없음
      */
-    public boolean addPaymentMethod(PaymentMethodType selectedType, String userId, String identifier, String password, String alias) {
+    public boolean addPaymentMethod(PaymentMethodType selectedType, String userId, String identifier, String password, String alias, String companyName) {
         // 1. 매니저로부터 공장 가져오기, user 가져오기
         PaymentFactory factory = PaymentFactoryManager.getFactory(selectedType);
         User user = findUserById(userId);
@@ -174,7 +175,7 @@ public class UserService {
         if (factory == null) return false;
 
         // 2. 팩토리를 통해 메서드 생성 (입력값 바탕으로)
-        PaymentMethod newMethod = factory.createPaymentMethod(identifier, password, alias);
+        PaymentMethod newMethod = factory.createPaymentMethod(identifier, password, alias, companyName); 
 
         // 3. 유저 리스트에 저장!
         user.addPaymentMethod(newMethod);
