@@ -231,7 +231,7 @@ public class KickboardConsoleUI {
             System.out.println("등록된 결제수단이 없습니다.");
         } else {
             for (PaymentMethod method : paymentMethods) {
-                System.out.println("별명: " + method.getAlias() + ", 카드번호: " + method.getIdentifier() + ", 잔액: " + method.getBalance());
+                System.out.println("|"+ method.getCompanyName() + "| 별명: " + method.getAlias() + ", 카드번호: " + method.getIdentifier() + ", 잔액: " + method.getBalance().intValue());
             }
         }
         System.out.println("--------------------------");
@@ -257,6 +257,7 @@ public class KickboardConsoleUI {
             }
             
             String cardNumber;
+            String companyName = "KakaoPay";
             // CREDIT_CARD일 때만 BIN 반복 체크 
             if (methodType == PaymentMethodType.CREDIT_CARD) {
                 while (true) {
@@ -266,6 +267,7 @@ public class KickboardConsoleUI {
                     if (cardNumberCheck(cardNumber)) {
                         String company = CARD_BIN_MAP.get(cardNumber.substring(0, 4));
                         System.out.println("확인됨: " + company + " 카드입니다.");
+                        companyName = company;
                         break; // 유효하면 루프 탈출
                     } else {
                         // 추가 정보 제공
@@ -285,7 +287,7 @@ public class KickboardConsoleUI {
             String alias = scanner.nextLine();
 
             
-            boolean added = kickboardService.getUserService().addPaymentMethod(methodType, currentUser.getUserId(), cardNumber, cvc, alias);
+            boolean added = kickboardService.getUserService().addPaymentMethod(methodType, currentUser.getUserId(), cardNumber, cvc, alias, companyName); 
             if (added) {
                 System.out.println("결제수단이 성공적으로 추가되었습니다.");
             } else {
@@ -343,24 +345,62 @@ public class KickboardConsoleUI {
         System.out.println(">> '" + chosenStrategy.name() + "' 요금제로 계산합니다.");
 
         // 2. 할인 선택
-        List<PromotionDecorator> promotions = kickboardService.getAvailablePromotions(rental); 
+        List<PromotionDecorator> promotions = kickboardService.getAvailablePromotions(rental);
         List<Integer> selectedIndexes = new ArrayList<>();
+        List<PaymentMethod> paymentMethods = currentUser.getPaymentMethods();
+
         if (!promotions.isEmpty()) {
-            System.out.println("\n적용할 할인을 선택해주세요. (공백으로 구분, 예: 1 2)");
-            for (int i = 0; i < promotions.size(); i++) {
-                System.out.printf("%d. %s\n", i + 1, promotions.get(i).getDisplayName());
+            System.out.println("\n적용할 할인을 선택해주세요. 카드는 중복 할인이 불가합니다. (예: 1 2)");
+
+            List<Integer> display = kickboardService.buildDisplayList(promotions, paymentMethods);
+
+            if (display.size() > 0) System.out.println("0. 할인 미적용"); 
+
+            for (int i = 0; i < display.size(); i++) // 할인 출력
+                System.out.printf("%d. %s\n", i + 1, promotions.get(display.get(i)).getDisplayName());
+            
+            if (display.isEmpty()) { // 할인 없음
+                System.out.println("\n적용 가능한 할인이 없습니다.");
+                selectedIndexes = List.of();
             }
-            while (true) {
-                System.out.print("선택: ");
-                String input = scanner.nextLine().trim();
-                if (input.isEmpty()) break;
-                // ... (입력 검증 로직은 생략, 원본 코드와 유사)
-                String[] parts = input.split("\\s+");
-                selectedIndexes.clear();
-                for (String p : parts) {
-                    if (!p.isEmpty()) selectedIndexes.add(Integer.parseInt(p) - 1);
+            else {
+                while (true) {
+                    System.out.print("선택: ");
+                    String input = scanner.nextLine().trim();
+
+                    if (input.isEmpty() || !Arrays.stream(input.split("\\s+")).allMatch(p -> p.chars().allMatch(Character::isDigit))) continue;
+
+                    if (input.contains("0")) {
+                        if (input.length() == 1) { // 0 단독 입력 → 할인 미적용
+                            selectedIndexes = List.of();
+                            break;
+                        } else { // 0 + 다른 번호/문자 섞이면 오류
+                            System.out.println("[오류]: 선택 번호가 잘못되었습니다.");
+                            continue;
+                        }
+                    }
+
+                    String[] parts = input.split("\\s+");
+
+                    if (Arrays.stream(parts) // 범위 검사
+                            .mapToInt(Integer::parseInt)
+                            .anyMatch(n -> n < 1 || n > display.size())) {
+                        System.out.println("[오류]: 선택 번호가 잘못되었습니다.");
+                        continue;
+                    }
+
+                    selectedIndexes = Arrays.stream(parts) // 실제 인덱스로 매핑
+                            .map(n -> display.get(Integer.parseInt(n) - 1))
+                            .toList();
+
+                    if (selectedIndexes.stream() // 카드 할인 중복 검사
+                            .filter(idx -> promotions.get(idx) instanceof CardDiscountDecorator)
+                            .count() > 1) {
+                        System.out.println("[오류]: 카드 할인은 하나만 선택 가능합니다.");
+                        continue;
+                    }
+                    break;
                 }
-                break;
             }
         }
 
@@ -373,31 +413,53 @@ public class KickboardConsoleUI {
         List<PaymentMethod> methods = currentUser.getPaymentMethods();
         if (methods.isEmpty()) {
             System.out.println("오류: 등록된 결제수단이 없습니다. 반납 처리가 취소됩니다.");
-            rental.revertComplete();
+            rental.revertComplete(); 
             return;
         }
-        System.out.println("\n사용 가능한 결제수단:");
-        for (int i = 0; i < methods.size(); i++) {
-            System.out.printf("%d. %s | 잔액: %s\n", i + 1, methods.get(i).getAlias(), methods.get(i).getBalance());  
-        }
 
-        PaymentMethod selectedMethod = null;
-        while (true) {
-            System.out.print("결제수단 선택 (취소하려면 'c' 입력): ");
-            String paymentInput = scanner.nextLine();
-            if (paymentInput.equalsIgnoreCase("c")) {
-                System.out.println("결제를 취소했습니다. 반납 처리가 취소됩니다.");
-                rental.revertComplete();
+        String forcedCompany = selectedIndexes.stream() // 선택된 카드 할인 여부 확인
+                .filter(idx -> promotions.get(idx) instanceof CardDiscountDecorator)
+                .map(idx -> promotions.get(idx).getDisplayName().split(" ")[0])
+                .findFirst()
+                .orElse(null);
+
+        if (forcedCompany != null) { // 카드 할인 적용 → 해당 카드만 필터
+            methods = methods.stream()
+                    .filter(m -> m.getCompanyName().equalsIgnoreCase(forcedCompany))
+                    .toList();
+            if (methods.isEmpty()) {
+                System.out.println("오류: 선택한 카드 할인에 해당하는 결제수단이 없습니다.");
+                rental.revertComplete(); 
                 return;
             }
-            try {
-                int paymentChoice = Integer.parseInt(paymentInput);
-                if (paymentChoice < 1 || paymentChoice > methods.size()) {
-                    System.out.println("오류: 1 ~ " + methods.size() + " 사이의 숫자를 입력하세요.");
+            System.out.println("\n(카드 할인 적용됨) 해당 카드만 선택 가능합니다:");
+        } else {
+            System.out.println("\n사용 가능한 결제수단:");
+        }
+       
+        for (int i = 0; i < methods.size(); i++) // 결제수단 표시
+            System.out.printf("%d. | %s | %s | 잔액: %s\n", i + 1, methods.get(i).getCompanyName() , methods.get(i).getAlias(), methods.get(i).getBalance().intValue());
+
+        PaymentMethod selectedMethod = null; 
+        while (true) { // 선택 입력
+            System.out.print("결제수단 선택 (취소하려면 'c' 입력): ");
+            String input = scanner.nextLine().trim();
+
+            if (input.equalsIgnoreCase("c")) {
+                System.out.println("결제를 취소했습니다. 반납 처리가 취소됩니다.");
+                rental.revertComplete(); 
+                return;
+            }
+
+        try {
+                int n = Integer.parseInt(input);
+                if (n < 1 || n > methods.size()) {
+                    System.out.println("오류: " + (methods.size() == 1 ? "1번만 선택 가능합니다." : "1 ~ " + methods.size() + " 사이의 숫자를 입력하세요."));
                     continue;
                 }
-                selectedMethod = methods.get(paymentChoice - 1);
+                selectedMethod = methods.get(n - 1);
                 break;
+
             } catch (NumberFormatException e) {
                 System.out.println("오류: 숫자만 입력해주세요.");
             }
