@@ -148,8 +148,10 @@ public class KickboardConsoleUI {
         String userId = scanner.nextLine();
         System.out.print("사용할 비밀번호: ");
         String password = scanner.nextLine();
+        System.out.print("면허증 번호:(12자리) ");
+        String licenseNumber = scanner.nextLine();
 
-        boolean success = kickboardService.register(userId, password);
+        boolean success = kickboardService.register(userId, password, licenseNumber);
         if (success) {
             System.out.println("'" + userId + "'님, 사용자 등록이 완료되었습니다.");
         } else {

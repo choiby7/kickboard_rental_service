@@ -125,8 +125,8 @@ public class KickboardRentalService {
         saveState();
     }
 
-    public boolean register(String userId, String password) {
-        boolean success = userService.register(userId, password);
+    public boolean register(String userId, String password, String licenseNumber) {
+        boolean success = userService.register(userId, password, licenseNumber);
         if (success) {
             saveState();
         }

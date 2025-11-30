@@ -1,5 +1,7 @@
 package com.kickboard.domain.user;
 
+import java.io.Serializable;
+
 /**
  * class DriverLicense.java: 면허정보 + 인증
  * @author: Choi BeomYeon
@@ -7,7 +9,7 @@ package com.kickboard.domain.user;
  * @version: 1.0
  * @date: 2025.10.8
  */
-public class DriverLicense {
+public class DriverLicense implements Serializable {
     private String licenseNumber;
     private boolean valid;
 

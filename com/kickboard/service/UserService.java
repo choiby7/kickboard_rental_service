@@ -55,7 +55,7 @@ public class UserService {
      * @param password 비밀번호
      * @return true: 등록 성공, false: 이미 존재하는 ID
      */
-    public boolean register(String userId, String password) {
+    public boolean register(String userId, String password, String licenseNumber) {
         Objects.requireNonNull(userId, "userId");
         Objects.requireNonNull(password, "password");
 
@@ -66,7 +66,19 @@ public class UserService {
             return false; // 빈 문자열 허용 안 함
         }
         User user = new User(userId, password);
+        DriverLicense driverLicense = new DriverLicense(licenseNumber);
+
+        if (!driverLicense.isValid()) {
+            return false; // 면허 등록 실패 시 회원가입 실패
+        }
+
         users.add(user);
+        boolean valid = registerDriverLicense(user.getUserId(), driverLicense); // 면허 등록 시도
+        if (!valid) {
+            users.remove(user); // 면허 등록 실패 시 사용자 제거
+            return false;
+        }
+
         return true;
     }
 
@@ -136,17 +148,16 @@ public class UserService {
      * - 사용자 존재 검증, 면허 생성 및 validate 호출, User에 set
      *
      * @param userId 대상 사용자 ID
-     * @param licenseNumber 면허번호
+     * @param license 면허번호
      * @return true: 등록 및 유효성 검사 통과, false: 사용자 없음 또는 유효하지 않음
      */
-    public boolean registerDriverLicense(String userId, String licenseNumber) {
+    public boolean registerDriverLicense(String userId, DriverLicense license) {
         Objects.requireNonNull(userId, "userId");
-        Objects.requireNonNull(licenseNumber, "licenseNumber");
+        Objects.requireNonNull(license, "license");
 
         User user = findUserById(userId);
         if (user == null) return false;
 
-        DriverLicense license = new DriverLicense(licenseNumber);
         if (!license.isValid()) {
             // 유효하지 않은 면허는 등록하지 않는다.
             return false;
