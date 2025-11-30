@@ -6,7 +6,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
-public class Payment {
+public abstract class Payment {
 
     /**
     * Payment.java	: setamout 및 processPayment 구현
