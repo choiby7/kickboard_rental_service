@@ -3,6 +3,7 @@ package com.kickboard.service;
 import com.kickboard.domain.factory.CreditCardFactory;
 import com.kickboard.domain.factory.KakaoPayFactory;
 import com.kickboard.domain.factory.PaymentFactory;
+import com.kickboard.domain.payment.PaymentFactoryManager;
 import com.kickboard.domain.rental.Payment;
 import com.kickboard.domain.rental.Rental;
 import com.kickboard.domain.rental.RentalStatus;
@@ -308,17 +309,7 @@ public class KickboardRentalService {
     public boolean processPayment(Rental rental, PaymentMethod method, BigDecimal cost) { // 결제 진행
         String rentalId = rental.getRentalId();
 
-        switch (method.getType()) {
-            case CREDIT_CARD:
-                paymentFactory = new CreditCardFactory();
-                break;
-            case KAKAO_PAY:
-                paymentFactory = new KakaoPayFactory();
-                break;
-            default:
-                paymentFactory = new CreditCardFactory(); // 기본값
-        }
-
+        paymentFactory = PaymentFactoryManager.getFactory(method.getType());
 
         Payment payment = paymentFactory.createPayment(method, cost, rentalId);
         payment.setAmount(cost);
@@ -415,8 +406,11 @@ public class KickboardRentalService {
                 String projectDir = Paths.get("").toAbsolutePath().toString();
                 String scriptCmd = "cd '" + projectDir.replace("'", "'\\''") + "'; " + command;
                 new ProcessBuilder("osascript",
-                        "-e", "tell application \"Terminal\" to activate", // 터미널 포커스
-                        "-e", "tell application \"Terminal\" to do script \"" + scriptCmd.replace("\"", "\\\"") + "\"").start();
+                        "-e", "tell application \"Terminal\"",
+                        "-e", "if not (exists window 1) then reopen", // 창이 하나도 없으면 엶
+                        "-e", "activate", // 터미널 활성화
+                        "-e", "do script \"" + scriptCmd.replace("\"", "\\\"") + "\" in window 1", // 현재 창(window 1)에서 실행
+                        "-e", "end tell").start();
             } else { // linux 등 기타 OS
                  try {
                     new ProcessBuilder("x-terminal-emulator", "-e", "bash", "-lc", command + "; exec bash").start();
